@@ -25,10 +25,11 @@ struct NoteListScreen: View {
                 .padding(.top, 16)
                 .padding(.bottom, 112)
             }
+            // En el ScrollView y no en el contenedor: si no, sustituye el identificador de "Nueva nota".
+            .accessibilityIdentifier(NoteListAccessibilityID.screen)
             .overlay(alignment: .bottomTrailing) { newNoteButton }
         }
         .background(Palette.background.ignoresSafeArea())
-        .accessibilityIdentifier(NoteListAccessibilityID.screen)
     }
 
     // MARK: - Cabecera y controles
