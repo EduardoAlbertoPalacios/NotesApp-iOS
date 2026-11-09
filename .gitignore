@@ -1,0 +1,25 @@
+# macOS
+.DS_Store
+
+# Xcode: datos por usuario
+xcuserdata/
+*.xcuserstate
+
+# Xcode: compilación y resultados
+DerivedData/
+build/
+*.xcresult
+
+# Swift Package Manager
+.build/
+.swiftpm/
+# Package.resolved SÍ se versiona: fija las versiones de las dependencias.
+
+# Secretos y firma
+.env
+*.p12
+*.cer
+*.mobileprovision
+
+# Claude Code: ajustes personales (los del proyecto en .claude/settings.json sí se versionan)
+.claude/settings.local.json
