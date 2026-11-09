@@ -7,10 +7,10 @@ _Última actualización: 2026-11-09_
 
 ## Estado actual
 
-- El repo sigue siendo la plantilla de Xcode: `NotesApp/NotesAppApp.swift` + `ContentView.swift`. Compila en el simulador `iPhone Duo`.
+- La app muestra la pantalla "Mis notas" (spec 001). Compila y corre en el simulador `iPhone Duo`.
 - `CLAUDE.md` define la arquitectura objetivo (Clean Architecture + MVI, paquete local `NotesKit` con `Presentation`, `Domain`, `Data`, `Common`).
 - **Spec 001 aprobada (2026-11-09):** `docs/specs/001-listado-notas-cuadricula/spec.md`, pantalla "Mis notas" en cuadrícula (Figma `JyeMmyDAEO1Y52QnwKwgGH`, marcos "Inicio · Mis notas"). Siguiente paso: plan de implementación.
-- **Plan 001 aprobado; paso 0 en curso:** `Packages/NotesKit` creado (targets y pruebas con placeholders, compila). Falta enlazarlo en Xcode y crear `NotesAppUITests`.
+- **Plan 001: pasos 0–5 hechos** en la rama `feat/001-notes-grid` (sin push). 78 pruebas unitarias + 9 de UI en verde; `architecture-reviewer` sin violaciones pendientes. Falta el paso 6: demo manual, decidir el orden de VoiceOver de las tarjetas (hoy sigue la posición vertical, no el orden de las notas) y abrir el PR.
 - **Pendiente de crear:** `docs/constitution.md`.
 
 ## Decisiones
