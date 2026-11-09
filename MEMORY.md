@@ -32,7 +32,4 @@ _Última actualización: 2026-11-09_
 - No apuntar a simuladores que no existen (`iPhone 16`/`iPhone 17`); el disponible es `iPhone Duo`.
 - El runtime iOS 27.1 solo admite `iPhone Duo`: `simctl create` de un iPad falla con "Incompatible device". La demo y las pruebas de UI en iPad de la spec 001 no se pueden ejecutar por ahora.
 - No editar `project.pbxproj` para agregar archivos (*synchronized groups*).
-
-## Por verificar
-
-- Sintaxis de `-only-testing:` para una sola prueba de Swift Testing.
+- `-only-testing` de una sola prueba de Swift Testing lleva paréntesis: `'DomainTests/<Suite>/<funcion>()'`. Sin ellos `xcodebuild` ejecuta 0 pruebas y aun así dice `** TEST SUCCEEDED **`.

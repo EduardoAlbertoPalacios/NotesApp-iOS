@@ -218,7 +218,7 @@ cd Packages/NotesKit && xcodebuild -scheme NotesKit-Package \
 xcodebuild -scheme NotesKit-Package -destination 'platform=iOS Simulator,name=iPhone Duo' \
   test -only-testing:DomainTests
 xcodebuild -scheme NotesKit-Package -destination 'platform=iOS Simulator,name=iPhone Duo' \
-  test -only-testing:DomainTests/SaveNoteUseCaseTests/saveNoteWithEmptyTitle
+  test -only-testing:'DomainTests/SaveNoteUseCaseTests/saveNoteWithEmptyTitle()'   # con (): sin ellos se ejecutan 0 pruebas
 
 # pruebas de UI
 xcodebuild -project NotesApp.xcodeproj -scheme NotesApp \
