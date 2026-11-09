@@ -9,7 +9,9 @@ _Última actualización: 2026-11-09_
 
 - El repo sigue siendo la plantilla de Xcode: `NotesApp/NotesAppApp.swift` + `ContentView.swift`. Compila en el simulador `iPhone Duo`.
 - `CLAUDE.md` define la arquitectura objetivo (Clean Architecture + MVI, paquete local `NotesKit` con `Presentation`, `Domain`, `Data`, `Common`).
-- **Pendiente de crear:** `Packages/NotesKit` (con `DomainTests`, `PresentationTests`, `DataTests`), target `NotesAppUITests`, `docs/constitution.md`.
+- **Spec 001 aprobada (2026-11-09):** `docs/specs/001-listado-notas-cuadricula/spec.md`, pantalla "Mis notas" en cuadrícula (Figma `JyeMmyDAEO1Y52QnwKwgGH`, marcos "Inicio · Mis notas"). Siguiente paso: plan de implementación.
+- **Plan 001 aprobado; paso 0 en curso:** `Packages/NotesKit` creado (targets y pruebas con placeholders, compila). Falta enlazarlo en Xcode y crear `NotesAppUITests`.
+- **Pendiente de crear:** `docs/constitution.md`.
 
 ## Decisiones
 
@@ -28,9 +30,9 @@ _Última actualización: 2026-11-09_
 
 - No usar Room ni guías de Android para migraciones; usar `VersionedSchema` + `MigrationStage`.
 - No apuntar a simuladores que no existen (`iPhone 16`/`iPhone 17`); el disponible es `iPhone Duo`.
+- El runtime iOS 27.1 solo admite `iPhone Duo`: `simctl create` de un iPad falla con "Incompatible device". La demo y las pruebas de UI en iPad de la spec 001 no se pueden ejecutar por ahora.
 - No editar `project.pbxproj` para agregar archivos (*synchronized groups*).
 
 ## Por verificar
 
-- Nombre real del esquema del paquete (`NotesKit-Package`): confirmar con `xcodebuild -list` al crearlo.
 - Sintaxis de `-only-testing:` para una sola prueba de Swift Testing.

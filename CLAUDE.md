@@ -228,7 +228,7 @@ xcodebuild -project NotesApp.xcodeproj -scheme NotesApp \
 swift format lint --recursive Packages NotesApp
 ```
 
-> El nombre del esquema del paquete (`NotesKit-Package`) lo genera Xcode; confírmalo con `xcodebuild -list` dentro de `Packages/NotesKit` una vez creado.
+> El esquema `NotesKit-Package` está confirmado (`xcodebuild -list` en `Packages/NotesKit`). El runtime instalado (iOS 27.1) solo admite el simulador `iPhone Duo`: no hay simuladores de iPad disponibles.
 
 > Antes de dar una tarea por terminada, ejecuta las pruebas unitarias de los módulos que tocaste.
 
