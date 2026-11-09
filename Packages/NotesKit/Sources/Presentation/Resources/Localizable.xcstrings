@@ -1,5 +1,33 @@
 {
   "sourceLanguage" : "es",
-  "strings" : {},
+  "strings" : {
+    "%lld notas · un espacio para tus ideas" : {
+      "localizations" : {
+        "es" : {
+          "variations" : {
+            "plural" : {
+              "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld nota · un espacio para tus ideas" } },
+              "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld notas · un espacio para tus ideas" } }
+            }
+          }
+        }
+      }
+    },
+    "Ayer" : { },
+    "Buscar en tus notas" : { },
+    "Cargando notas" : { },
+    "completada" : { },
+    "Fijada" : { },
+    "Hoy, %@" : { },
+    "Mis notas" : { },
+    "No pudimos cargar tus notas." : { },
+    "Nueva nota" : { },
+    "pendiente" : { },
+    "Personal" : { },
+    "Reintentar" : { },
+    "Todas" : { },
+    "Trabajo" : { },
+    "Última edición" : { }
+  },
   "version" : "1.0"
 }
