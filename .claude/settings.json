@@ -1,0 +1,12 @@
+{
+  "skillOverrides": {
+    "anthropic-skills:room-migration": "off",
+    "room-migration": "off"
+  },
+  "permissions": {
+    "deny": [
+      "Skill(anthropic-skills:room-migration)",
+      "Skill(room-migration)"
+    ]
+  }
+}
