@@ -73,10 +73,16 @@ enum NoteCardAccessibility {
                 let status = task.isDone
                     ? String(localized: "completada", bundle: .module)
                     : String(localized: "pendiente", bundle: .module)
-                parts.append("\(task.text), \(status)")
+                parts.append(String(localized: "\(task.text), \(status)", bundle: .module))
             }
         }
         parts.append(dateText)
-        return parts.joined(separator: ". ")
+        let separator = String(
+            localized: "noteCard.accessibility.separator",
+            defaultValue: ". ",
+            bundle: .module,
+            comment: "Separa las partes que lee VoiceOver en una tarjeta"
+        )
+        return parts.joined(separator: separator)
     }
 }

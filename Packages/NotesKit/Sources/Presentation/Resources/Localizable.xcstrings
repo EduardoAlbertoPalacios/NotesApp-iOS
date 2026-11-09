@@ -13,6 +13,9 @@
         }
       }
     },
+    "%@, %@" : {
+      "comment" : "Tarea de una tarjeta para VoiceOver: texto de la tarea y su estado (\"Tomates, pendiente\")"
+    },
     "Ayer" : { },
     "Buscar en tus notas" : { },
     "Cargando notas" : { },
@@ -21,6 +24,12 @@
     "Hoy, %@" : { },
     "Mis notas" : { },
     "No pudimos cargar tus notas." : { },
+    "noteCard.accessibility.separator" : {
+      "comment" : "Separa las partes que lee VoiceOver en una tarjeta",
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : ". " } }
+      }
+    },
     "Nueva nota" : { },
     "pendiente" : { },
     "Personal" : { },

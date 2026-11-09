@@ -208,6 +208,11 @@ private enum PreviewData {
     NoteListScreen(state: NoteListState(), now: PreviewData.now, isPad: false, onIntent: { _ in })
 }
 
+/// No puede ocurrir en la spec 001 (no se borran notas), pero `CLAUDE.md` pide una preview por estado.
+#Preview("Vacío") {
+    NoteListScreen(state: NoteListState(isLoading: false), now: PreviewData.now, isPad: false, onIntent: { _ in })
+}
+
 #Preview("Error") {
     NoteListScreen(
         state: NoteListState(isLoading: false, loadError: .loadFailed),
@@ -220,6 +225,11 @@ private enum PreviewData {
 #Preview("Texto grande") {
     NoteListScreen(state: PreviewData.loaded, now: PreviewData.now, isPad: false, onIntent: { _ in })
         .dynamicTypeSize(.accessibility2)
+}
+
+#Preview("iPad vertical", traits: .portrait) {
+    NoteListScreen(state: PreviewData.loaded, now: PreviewData.now, isPad: true, onIntent: { _ in })
+        .environment(\.horizontalSizeClass, .regular)
 }
 
 #Preview("iPad horizontal", traits: .landscapeLeft) {
