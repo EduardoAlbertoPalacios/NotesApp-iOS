@@ -8,7 +8,7 @@ public enum DataAssembly {
     public static func makeModelContainer(inMemory: Bool = false) throws(AppError) -> ModelContainer {
         do {
             return try ModelContainer(
-                for: Schema(versionedSchema: NotesSchemaV1.self),
+                for: Schema(versionedSchema: NotesSchemaV2.self),
                 migrationPlan: NotesMigrationPlan.self,
                 configurations: ModelConfiguration(isStoredInMemoryOnly: inMemory)
             )

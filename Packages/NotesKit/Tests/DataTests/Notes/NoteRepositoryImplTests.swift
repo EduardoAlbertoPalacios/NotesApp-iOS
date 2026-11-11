@@ -67,6 +67,53 @@ struct NoteRepositoryImplTests {
 
         #expect(Set(try first.get()) == Set(notes))
     }
+
+    @Test("given an open observation when deleting a note then emits again without the deleted note")
+    func reEmitsAfterDelete() async throws {
+        let kept = Note.fixture(title: "Se queda", sequence: 0)
+        let deleted = Note.fixture(title: "Se borra", sequence: 1)
+        let repository = DataAssembly.makeNoteRepository(container: try makeContainer())
+        try await repository.save([kept, deleted])
+        var results = repository.observeNotes().makeAsyncIterator()
+        #expect(await results.next(matching: [kept, deleted]) == [kept, deleted])
+
+        try await repository.delete(id: deleted.id)
+
+        #expect(await results.next(matching: [kept]) == [kept])
+    }
+
+    @Test("given stored notes when deleting through the repository then the store no longer has that note")
+    func deleteRemovesFromStore() async throws {
+        let container = try makeContainer()
+        let kept = Note.fixture(title: "Se queda", sequence: 0)
+        let deleted = Note.fixture(title: "Se borra", sequence: 1)
+        let repository = DataAssembly.makeNoteRepository(container: container)
+        try await repository.save([kept, deleted])
+
+        try await repository.delete(id: deleted.id)
+
+        let stored = try await NoteLocalDataSource(modelContainer: container).fetchAll()
+        #expect(stored == [kept])
+    }
+
+    @Test("given stored notes when asking next sequence through the repository then returns highest plus one")
+    func nextSequenceDelegates() async throws {
+        let repository = DataAssembly.makeNoteRepository(container: try makeContainer())
+        try await repository.save([Note.fixture(sequence: 4), Note.fixture(sequence: 2)])
+
+        let next = try await repository.nextSequence()
+
+        #expect(next == 5)
+    }
+
+    @Test("given empty store when asking next sequence through the repository then returns zero")
+    func nextSequenceEmptyDelegates() async throws {
+        let repository = DataAssembly.makeNoteRepository(container: try makeContainer())
+
+        let next = try await repository.nextSequence()
+
+        #expect(next == 0)
+    }
 }
 
 @Suite(.timeLimit(.minutes(1)))
@@ -86,6 +133,24 @@ struct UnavailableNoteRepositoryTests {
 
         await #expect(throws: AppError.storageUnavailable) {
             try await repository.save([.fixture()])
+        }
+    }
+
+    @Test("given unavailable storage when deleting then throws storage unavailable")
+    func deleteThrows() async {
+        let repository = DataAssembly.makeUnavailableNoteRepository()
+
+        await #expect(throws: AppError.storageUnavailable) {
+            try await repository.delete(id: UUID())
+        }
+    }
+
+    @Test("given unavailable storage when asking next sequence then throws storage unavailable")
+    func nextSequenceThrows() async {
+        let repository = DataAssembly.makeUnavailableNoteRepository()
+
+        await #expect(throws: AppError.storageUnavailable) {
+            try await repository.nextSequence()
         }
     }
 }

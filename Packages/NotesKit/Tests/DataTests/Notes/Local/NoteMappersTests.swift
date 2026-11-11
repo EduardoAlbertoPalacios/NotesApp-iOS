@@ -53,6 +53,60 @@ struct NoteMappersTests {
         #expect(try entity.toDomain() == changed)
     }
 
+    @Test(
+        "given note with or without category when mapped to entity and back then keeps the category",
+        arguments: [NoteCategory.work, .personal, nil]
+    )
+    func roundTripKeepsCategory(category: NoteCategory?) throws {
+        let note = Note.fixture(category: category)
+
+        let mapped = try note.toEntity().toDomain()
+
+        #expect(mapped == note)
+    }
+
+    @Test("given note without category when mapped to entity then stores nil category raw value")
+    func noCategoryStoresNil() throws {
+        let entity = try Note.fixture(category: nil).toEntity()
+
+        #expect(entity.categoryRawValue == nil)
+    }
+
+    @Test("given entity with unknown category raw value when mapped to domain then throws corrupted data")
+    func unknownCategoryThrows() throws {
+        let entity = try Note.fixture(category: .work).toEntity()
+        entity.categoryRawValue = "hobbies"
+
+        #expect(throws: AppError.corruptedData) {
+            try entity.toDomain()
+        }
+    }
+
+    @Test("given entity without category when updated from note with category then maps to that category")
+    func updateSetsCategory() throws {
+        let original = Note.fixture(category: nil)
+        let entity = try original.toEntity()
+        var changed = original
+        changed.category = .personal
+
+        try entity.update(from: changed)
+
+        #expect(try entity.toDomain() == changed)
+    }
+
+    @Test("given entity with category when updated from note without category then clears it")
+    func updateClearsCategory() throws {
+        let original = Note.fixture(category: .work)
+        let entity = try original.toEntity()
+        var changed = original
+        changed.category = nil
+
+        try entity.update(from: changed)
+
+        #expect(entity.categoryRawValue == nil)
+        #expect(try entity.toDomain() == changed)
+    }
+
     @Test("given entity with unknown color raw value when mapped to domain then throws corrupted data")
     func unknownColorThrows() throws {
         let entity = try Note.fixture().toEntity()

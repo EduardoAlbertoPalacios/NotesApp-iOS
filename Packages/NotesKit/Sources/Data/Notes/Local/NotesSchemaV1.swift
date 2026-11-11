@@ -1,8 +1,8 @@
 import Foundation
 import SwiftData
 
-/// Primera versión del esquema de notas.
-/// Cualquier cambio en `NoteEntity` requiere un `NotesSchemaV2` y su `MigrationStage`.
+/// Primera versión del esquema de notas. Se conserva para migrar almacenes antiguos a V2;
+/// no se modifica. Cualquier cambio en `NoteEntity` requiere un esquema nuevo y su `MigrationStage`.
 enum NotesSchemaV1: VersionedSchema {
     static var versionIdentifier: Schema.Version { Schema.Version(1, 0, 0) }
 
@@ -38,5 +38,3 @@ enum NotesSchemaV1: VersionedSchema {
         }
     }
 }
-
-typealias NoteEntity = NotesSchemaV1.NoteEntity

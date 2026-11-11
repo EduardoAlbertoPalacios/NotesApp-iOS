@@ -12,6 +12,7 @@ extension Note {
         title: String = "Título",
         blocks: [NoteBlock] = [.text("Contenido")],
         color: NoteColor = .yellow,
+        category: NoteCategory? = nil,
         isPinned: Bool = false,
         updatedAt: Date = .fixture,
         sequence: Int = 0
@@ -21,6 +22,7 @@ extension Note {
             title: title,
             blocks: blocks,
             color: color,
+            category: category,
             isPinned: isPinned,
             updatedAt: updatedAt,
             sequence: sequence

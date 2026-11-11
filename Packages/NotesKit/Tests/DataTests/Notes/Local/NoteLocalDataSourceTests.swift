@@ -55,4 +55,62 @@ struct NoteLocalDataSourceTests {
 
         #expect(Set(try await dataSource.fetchAll()) == Set(notes))
     }
+
+    @Test("given saved notes with and without category when fetching all then keeps each category")
+    func saveKeepsCategory() async throws {
+        let dataSource = try makeSut()
+        let notes = [
+            Note.fixture(title: "Trabajo", category: .work, sequence: 0),
+            Note.fixture(title: "Personal", category: .personal, sequence: 1),
+            Note.fixture(title: "Sin categoría", category: nil, sequence: 2),
+        ]
+
+        try await dataSource.save(notes)
+
+        #expect(Set(try await dataSource.fetchAll()) == Set(notes))
+    }
+
+    @Test("given several notes when deleting one by id then only that note is removed")
+    func deleteRemovesOnlyThatNote() async throws {
+        let dataSource = try makeSut()
+        let kept = [Note.fixture(title: "Uno", sequence: 0), Note.fixture(title: "Tres", sequence: 2)]
+        let deleted = Note.fixture(title: "Dos", sequence: 1)
+        try await dataSource.save(kept + [deleted])
+
+        try await dataSource.delete(id: deleted.id)
+
+        #expect(Set(try await dataSource.fetchAll()) == Set(kept))
+    }
+
+    @Test("given stored notes when deleting an unknown id then does not fail nor remove anything")
+    func deleteUnknownIdIsNoOp() async throws {
+        let dataSource = try makeSut()
+        let notes = [Note.fixture(title: "Uno", sequence: 0), Note.fixture(title: "Dos", sequence: 1)]
+        try await dataSource.save(notes)
+
+        try await dataSource.delete(id: UUID())
+
+        #expect(Set(try await dataSource.fetchAll()) == Set(notes))
+    }
+
+    @Test("given empty store when asking next sequence then returns zero")
+    func nextSequenceEmptyIsZero() async throws {
+        let dataSource = try makeSut()
+
+        let next = try await dataSource.nextSequence()
+
+        #expect(next == 0)
+    }
+
+    @Test("given notes saved out of sequence order when asking next sequence then returns highest plus one")
+    func nextSequenceIsMaxPlusOne() async throws {
+        let dataSource = try makeSut()
+        try await dataSource.save([Note.fixture(sequence: 3)])
+        try await dataSource.save([Note.fixture(sequence: 9)])
+        try await dataSource.save([Note.fixture(sequence: 1)])
+
+        let next = try await dataSource.nextSequence()
+
+        #expect(next == 10)
+    }
 }
