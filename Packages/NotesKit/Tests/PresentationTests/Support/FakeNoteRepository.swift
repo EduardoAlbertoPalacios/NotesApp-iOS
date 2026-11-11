@@ -13,6 +13,7 @@ final class FakeNoteRepository: NoteRepository {
         var fixedNextSequence: Int?
         var deletedIDs: [UUID] = []
         var nextSequenceCallCount = 0
+        var saveCallCount = 0
         var scriptedReads: [Result<[Note], AppError>]?
         var finishesStreams: Bool
         var continuations: [UUID: AsyncStream<Result<[Note], AppError>>.Continuation] = [:]
@@ -62,6 +63,16 @@ final class FakeNoteRepository: NoteRepository {
     /// Cada `id` pasado a `delete(id:)` que terminó bien, en orden.
     var deletedIDs: [UUID] {
         state.withLock { $0.deletedIDs }
+    }
+
+    /// Notas guardadas ahora mismo, en orden de guardado.
+    var notes: [Note] {
+        state.withLock { $0.notes }
+    }
+
+    /// Veces que se llamó a `save(_:)`, haya fallado o no.
+    var saveCallCount: Int {
+        state.withLock { $0.saveCallCount }
     }
 
     /// Veces que se llamó a `nextSequence()`, haya fallado o no.
@@ -124,6 +135,7 @@ final class FakeNoteRepository: NoteRepository {
 
     func save(_ notes: [Note]) async throws(AppError) {
         try state.withLock { (state) throws(AppError) in
+            state.saveCallCount += 1
             if let failure = state.saveFailure { throw failure }
             for note in notes {
                 state.notes.removeAll { $0.id == note.id }
