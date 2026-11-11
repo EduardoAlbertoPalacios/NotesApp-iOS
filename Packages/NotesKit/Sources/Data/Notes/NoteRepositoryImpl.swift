@@ -31,6 +31,14 @@ final class NoteRepositoryImpl: NoteRepository {
         try await dataSource.save(notes)
     }
 
+    func delete(id: UUID) async throws(AppError) {
+        try await dataSource.delete(id: id)
+    }
+
+    func nextSequence() async throws(AppError) -> Int {
+        try await dataSource.nextSequence()
+    }
+
     private static func read(_ dataSource: NoteLocalDataSource) async -> Result<[Note], AppError> {
         do {
             return .success(try await dataSource.fetchAll())
@@ -50,6 +58,14 @@ final class UnavailableNoteRepository: NoteRepository {
     }
 
     func save(_ notes: [Note]) async throws(AppError) {
+        throw .storageUnavailable
+    }
+
+    func delete(id: UUID) async throws(AppError) {
+        throw .storageUnavailable
+    }
+
+    func nextSequence() async throws(AppError) -> Int {
         throw .storageUnavailable
     }
 }

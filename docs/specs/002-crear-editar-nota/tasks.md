@@ -26,8 +26,8 @@ Desglose del [plan 002](plan.md) (aprobado el 2026-11-11). Cada tarea es una uni
   `enum NoteCategory: String, CaseIterable, Sendable { case work, personal }` y `Note.category: NoteCategory?` con `nil` por defecto en el `init`.
   **Hecho cuando:** el paquete compila sin tocar `SampleNotes` ni las pruebas existentes.
 - [ ] **T-02 · Contrato del repositorio** — *yo* · RF-33
-  `NoteRepository.delete(id:) async throws(AppError)` y `nextSequence() async throws(AppError) -> Int`, con su documentación.
-  **Hecho cuando:** el protocolo compila (las implementaciones se completan en T-04 y T-08).
+  `NoteRepository.delete(id:) async throws(AppError)` y `nextSequence() async throws(AppError) -> Int`, con su documentación, **y su implementación en `Data`** (`NoteLocalDataSource`, `NoteRepositoryImpl`, `UnavailableNoteRepository`), adelantada desde T-10 para que cada commit compile. Sus pruebas siguen en T-11.
+  **Hecho cuando:** el paquete compila.
 - [ ] **T-03 · Borrador y resultado** — *yo* · RF-32 a RF-37
   `NoteDraft` (`id`, `isNew`, `title`, `blocks`, `category`, `isPinned`) y `enum NoteSaveResult { saved(Note), deleted, skipped }`, ambos `Equatable` y `Sendable`.
   **Hecho cuando:** compilan y son `public`.
@@ -50,7 +50,7 @@ Desglose del [plan 002](plan.md) (aprobado el 2026-11-11). Cada tarea es una uni
 - [ ] **T-09 · Mappers** — *yo* · depende de T-08 · RF-14 a RF-19
   `toDomain`, `toEntity` y `update(from:)` con la categoría; valor desconocido ⇒ `.corruptedData`.
 - [ ] **T-10 · Data source y repositorios** [P] — *yo* · depende de T-08 · RF-33
-  `NoteLocalDataSource.delete(id:)` (con `rollback` si falla) y `nextSequence()` (orden por `sequence` descendente, `fetchLimit = 1`, vacío ⇒ 0). `NoteRepositoryImpl` y `UnavailableNoteRepository` implementan ambos.
+  `delete(id:)` y `nextSequence()` ya se implementaron en T-02. Aquí solo se revisan junto con el esquema V2.
 - [ ] **T-11 · Pruebas de Data** — *test-writer* · depende de T-09 y T-10
   Mapper con y sin categoría y con valor desconocido; borrar; siguiente secuencia; la observación vuelve a emitir tras borrar; **migración V1 → V2** con archivo temporal que conserva las notas sin categoría.
 - [ ] **T-12 · Cierre del paso 2** — *test-runner* + *yo*

@@ -9,4 +9,10 @@ public protocol NoteRepository: Sendable {
 
     /// Guarda las notas (inserta o reemplaza por `id`) en una sola operación.
     func save(_ notes: [Note]) async throws(AppError)
+
+    /// Borra la nota con ese `id`. No hace nada si no existe.
+    func delete(id: UUID) async throws(AppError)
+
+    /// `sequence` para una nota nueva: el mayor guardado más uno, o 0 si no hay notas.
+    func nextSequence() async throws(AppError) -> Int
 }

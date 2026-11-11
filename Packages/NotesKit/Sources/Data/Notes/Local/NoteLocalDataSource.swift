@@ -43,4 +43,32 @@ actor NoteLocalDataSource {
             throw .storageUnavailable
         }
     }
+
+    /// Borra la nota con ese `id`; no hace nada si no existe.
+    func delete(id: UUID) throws(AppError) {
+        do {
+            let descriptor = FetchDescriptor<NoteEntity>(predicate: #Predicate { $0.id == id })
+            for entity in try modelContext.fetch(descriptor) {
+                modelContext.delete(entity)
+            }
+            try modelContext.save()
+        } catch {
+            // Límite con SwiftData: `fetch`/`save` lanzan `any Error`; se traduce a AppError.
+            modelContext.rollback()
+            throw .storageUnavailable
+        }
+    }
+
+    /// El mayor `sequence` guardado más uno, o 0 si no hay notas.
+    func nextSequence() throws(AppError) -> Int {
+        var descriptor = FetchDescriptor<NoteEntity>(sortBy: [SortDescriptor(\.sequence, order: .reverse)])
+        descriptor.fetchLimit = 1
+        do {
+            guard let last = try modelContext.fetch(descriptor).first else { return 0 }
+            return last.sequence + 1
+        } catch {
+            // Límite con SwiftData: `fetch` lanza `any Error`; se traduce a AppError.
+            throw .storageUnavailable
+        }
+    }
 }

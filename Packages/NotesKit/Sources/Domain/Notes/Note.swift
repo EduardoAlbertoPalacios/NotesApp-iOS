@@ -6,6 +6,8 @@ public struct Note: Identifiable, Hashable, Sendable {
     public var title: String
     public var blocks: [NoteBlock]
     public var color: NoteColor
+    /// `nil` si la nota no tiene categoría.
+    public var category: NoteCategory?
     public var isPinned: Bool
     public var updatedAt: Date
     /// Orden de creación; desempata notas con la misma `updatedAt` (la creada antes va primero).
@@ -16,6 +18,7 @@ public struct Note: Identifiable, Hashable, Sendable {
         title: String,
         blocks: [NoteBlock],
         color: NoteColor,
+        category: NoteCategory? = nil,
         isPinned: Bool = false,
         updatedAt: Date,
         sequence: Int
@@ -24,6 +27,7 @@ public struct Note: Identifiable, Hashable, Sendable {
         self.title = title
         self.blocks = blocks
         self.color = color
+        self.category = category
         self.isPinned = isPinned
         self.updatedAt = updatedAt
         self.sequence = sequence
