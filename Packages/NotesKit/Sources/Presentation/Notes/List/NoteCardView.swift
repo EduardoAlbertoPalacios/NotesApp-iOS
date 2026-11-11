@@ -8,7 +8,7 @@ struct NoteCardView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .top, spacing: 8) {
-                Text(note.title)
+                Text(note.displayTitle)
                     .font(.title3.weight(.semibold))
                     .foregroundStyle(Palette.onCard)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -34,7 +34,6 @@ struct NoteCardView: View {
         // Una sola parada de VoiceOver por tarjeta, con el estado de cada tarea en la lectura (RF-40 a RF-42).
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(NoteCardAccessibility.label(for: note, dateText: dateText))
-        .accessibilityIdentifier(NoteListAccessibilityID.card)
     }
 
     @ViewBuilder
@@ -58,10 +57,17 @@ struct NoteCardView: View {
     }
 }
 
+extension Note {
+    /// Título visible: una nota sin título se muestra como "Sin título" (spec 002, RF-34).
+    var displayTitle: String {
+        title.isEmpty ? String(localized: "Sin título", bundle: .module) : title
+    }
+}
+
 /// Texto que lee VoiceOver para una tarjeta.
 enum NoteCardAccessibility {
     static func label(for note: Note, dateText: String) -> String {
-        var parts = [note.title]
+        var parts = [note.displayTitle]
         if note.isPinned {
             parts.append(String(localized: "Fijada", bundle: .module))
         }

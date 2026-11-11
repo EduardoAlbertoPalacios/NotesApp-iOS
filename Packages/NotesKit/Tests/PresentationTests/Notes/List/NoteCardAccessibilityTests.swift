@@ -28,4 +28,26 @@ struct NoteCardAccessibilityTests {
         #expect(label == "Ideas sueltas. Un café y una libreta.. Ayer")
         #expect(!label.contains("Fijada"))
     }
+
+    @Test("given note without title when building label then starts with Sin título")
+    func untitledNoteLabelStartsWithPlaceholder() {
+        let note = Note.fixture(title: "", blocks: [.text("Algo")], isPinned: false)
+
+        let label = NoteCardAccessibility.label(for: note, dateText: "Ayer")
+
+        #expect(label.hasPrefix("Sin título. "))
+        #expect(label == "Sin título. Algo. Ayer")
+    }
+}
+
+struct NoteDisplayTitleTests {
+    @Test("given empty title when reading display title then returns Sin título")
+    func emptyTitleShowsPlaceholder() {
+        #expect(Note.fixture(title: "").displayTitle == "Sin título")
+    }
+
+    @Test("given title when reading display title then returns the title unchanged")
+    func titleIsReturned() {
+        #expect(Note.fixture(title: "La compra").displayTitle == "La compra")
+    }
 }

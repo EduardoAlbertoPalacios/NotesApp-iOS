@@ -17,7 +17,9 @@ struct NotesAppApp: App {
             NavigationStack {
                 NoteListRoute(
                     observeNotes: container.observeNotes,
-                    seedSampleNotes: container.seedSampleNotes
+                    seedSampleNotes: container.seedSampleNotes,
+                    // Provisional hasta el paso 5 del plan 002, que añade la navegación al editor.
+                    onOpen: { _ in }
                 )
                 .toolbar(.hidden, for: .navigationBar)
             }

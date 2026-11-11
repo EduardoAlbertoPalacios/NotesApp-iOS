@@ -1,14 +1,13 @@
 import Domain
 import Observation
 
-/// Sin `NoteListEffect` ni `effects()` en esta iteración: no hay navegación ni mensajes
-/// de un solo uso (excepción aprobada en el plan 001).
 @MainActor
 @Observable
 final class NoteListViewModel {
     private(set) var state = NoteListState()
     /// Cambia con cada reintento; la Route lo usa como `id` de su `.task` para reiniciar la carga.
     private(set) var reloadToken = 0
+    @ObservationIgnored private var effectContinuation: AsyncStream<NoteListEffect>.Continuation?
 
     private let observeNotes: ObserveNotesUseCase
     private let seedSampleNotes: SeedSampleNotesUseCase
@@ -18,11 +17,27 @@ final class NoteListViewModel {
         self.seedSampleNotes = seedSampleNotes
     }
 
+    /// Crea un stream nuevo por suscripción (ver `CLAUDE.md`).
+    func effects() -> AsyncStream<NoteListEffect> {
+        effectContinuation?.finish()
+        let (stream, continuation) = AsyncStream.makeStream(of: NoteListEffect.self)
+        effectContinuation = continuation
+        return stream
+    }
+
     func send(_ intent: NoteListIntent) {
         switch intent {
         case .retryTapped:
             reloadToken &+= 1
+        case .newNoteTapped:
+            emit(.open(.newNote))
+        case .noteTapped(let note):
+            emit(.open(.note(note)))
         }
+    }
+
+    private func emit(_ effect: NoteListEffect) {
+        effectContinuation?.yield(effect)
     }
 
     /// Siembra las notas de ejemplo si hace falta y observa las notas hasta que se cancele la tarea.

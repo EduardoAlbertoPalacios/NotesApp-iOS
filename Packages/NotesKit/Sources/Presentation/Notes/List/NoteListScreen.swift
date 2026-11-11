@@ -1,8 +1,9 @@
 import Domain
 import SwiftUI
 
-/// Vista sin estado de "Mis notas". Los controles de búsqueda, filtros, orden, ajustes y
-/// "Nueva nota" se dibujan como vistas estáticas: no tienen función en esta iteración (RF-29 a RF-31).
+/// Vista sin estado de "Mis notas". Los controles de búsqueda, filtros, orden y ajustes se dibujan
+/// como vistas estáticas: no tienen función todavía (spec 001, RF-29 a RF-31). "Nueva nota" y las
+/// tarjetas abren el editor (spec 002, RF-1 y RF-4).
 struct NoteListScreen: View {
     let state: NoteListState
     let now: Date
@@ -107,19 +108,23 @@ struct NoteListScreen: View {
     }
 
     private var newNoteButton: some View {
-        HStack(spacing: 10) {
-            Image(systemName: "plus")
-            Text("Nueva nota", bundle: .module)
+        Button {
+            onIntent(.newNoteTapped)
+        } label: {
+            HStack(spacing: 10) {
+                Image(systemName: "plus")
+                Text("Nueva nota", bundle: .module)
+            }
+            .font(.headline)
+            .foregroundStyle(Palette.onCard)
+            .padding(.horizontal, 24)
+            .frame(minHeight: 60)
+            .background(Palette.accent, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+            .shadow(color: .black.opacity(0.12), radius: 12, y: 4)
         }
-        .font(.headline)
-        .foregroundStyle(Palette.onCard)
-        .padding(.horizontal, 24)
-        .frame(minHeight: 60)
-        .background(Palette.accent, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .shadow(color: .black.opacity(0.12), radius: 12, y: 4)
+        .buttonStyle(.plain)
         .padding(.trailing, 24)
         .padding(.bottom, 16)
-        .accessibilityElement(children: .combine)
         .accessibilityIdentifier(NoteListAccessibilityID.newNoteButton)
     }
 
@@ -145,7 +150,14 @@ struct NoteListScreen: View {
                 spacing: 12
             ) {
                 ForEach(state.notes) { note in
-                    NoteCardView(note: note, dateText: dateFormatter.string(for: note.updatedAt, now: now))
+                    Button {
+                        onIntent(.noteTapped(note))
+                    } label: {
+                        NoteCardView(note: note, dateText: dateFormatter.string(for: note.updatedAt, now: now))
+                    }
+                    .buttonStyle(.plain)
+                    // En el botón: es el elemento que ven VoiceOver y las pruebas de UI.
+                    .accessibilityIdentifier(NoteListAccessibilityID.card)
                 }
             }
             .accessibilityElement(children: .contain)

@@ -146,4 +146,81 @@ struct NoteListViewModelTests {
 
         #expect(viewModel.state.loadError == nil)
     }
+
+    // MARK: - Navegación (spec 002)
+
+    @Test("given new note tapped when intent sent then emits open new note effect")
+    func newNoteTappedOpensNewNote() async {
+        let viewModel = makeViewModel()
+        var effects = viewModel.effects().makeAsyncIterator()
+
+        viewModel.send(.newNoteTapped)
+
+        #expect(await effects.next() == .open(.newNote))
+    }
+
+    @Test("given note tapped when intent sent then emits open effect with that note")
+    func noteTappedOpensNote() async {
+        let note = Note.fixture(title: "La compra")
+        let viewModel = makeViewModel()
+        var effects = viewModel.effects().makeAsyncIterator()
+
+        viewModel.send(.noteTapped(note))
+
+        #expect(await effects.next() == .open(.note(note)))
+    }
+
+    @Test("given first effects subscription cancelled when subscribing again then new stream receives effects")
+    func effectsSurviveCancelledSubscription() async {
+        let viewModel = makeViewModel()
+        let firstStream = viewModel.effects()
+        let firstConsumer = Task {
+            var effects = firstStream.makeAsyncIterator()
+            return await effects.next()
+        }
+        firstConsumer.cancel()
+        #expect(await firstConsumer.value == nil)
+
+        var effects = viewModel.effects().makeAsyncIterator()
+        viewModel.send(.newNoteTapped)
+
+        #expect(await effects.next() == .open(.newNote))
+    }
+
+    @Test("given new subscription when an effect is emitted then previous stream finishes without receiving it")
+    func resubscribingFinishesPreviousStream() async {
+        let viewModel = makeViewModel()
+        var oldEffects = viewModel.effects().makeAsyncIterator()
+        var newEffects = viewModel.effects().makeAsyncIterator()
+
+        viewModel.send(.noteTapped(.fixture()))
+
+        #expect(await oldEffects.next() == nil)
+        #expect(await newEffects.next() != nil)
+    }
+
+    @Test("given notes loaded when navigation intents sent then state and reload token are unchanged")
+    func navigationIntentsDoNotChangeState() async {
+        let viewModel = makeViewModel()
+        await viewModel.start()
+        let stateBefore = viewModel.state
+
+        viewModel.send(.newNoteTapped)
+        viewModel.send(.noteTapped(.fixture()))
+
+        #expect(viewModel.state == stateBefore)
+        #expect(viewModel.reloadToken == 0)
+    }
+
+    @Test("given no effects subscriber when navigation intent sent then effect is dropped")
+    func effectWithoutSubscriberIsDropped() async {
+        let viewModel = makeViewModel()
+        viewModel.send(.newNoteTapped)
+        let stream = viewModel.effects()
+
+        _ = viewModel.effects()
+        var effects = stream.makeAsyncIterator()
+
+        #expect(await effects.next() == nil)
+    }
 }
