@@ -107,6 +107,8 @@ final class NoteListUITests: XCTestCase {
         XCTAssertEqual(element(ID.newNoteButton, in: app).label, "Nueva nota")
     }
 
+    /// Buscador y filtros siguen sin función (spec 001, RF-31/RF-32). "Nueva nota" y las
+    /// tarjetas ya abren el editor (spec 002, RF-1 y RF-4): lo cubre `NoteEditorUITests`.
     func testGivenStaticControlsWhenTappedThenScreenDoesNotChange() {
         let app = launch()
         XCTAssertTrue(element(ID.counter, in: app).waitForExistence(timeout: timeout))
@@ -114,8 +116,6 @@ final class NoteListUITests: XCTestCase {
         element(ID.searchField, in: app).tap()
         element(ID.filterWork, in: app).tap()
         element(ID.filterPersonal, in: app).tap()
-        element(ID.newNoteButton, in: app).tap()
-        card(titled: "Reunión de equipo", in: app).tap()
 
         XCTAssertEqual(app.keyboards.count, 0)
         XCTAssertEqual(element(ID.counter, in: app).label, counterText)

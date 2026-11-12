@@ -7,6 +7,7 @@ import Foundation
 struct AppContainer {
     let observeNotes: ObserveNotesUseCase
     let seedSampleNotes: SeedSampleNotesUseCase
+    let saveNote: SaveNoteUseCase
 
     /// Argumentos de lanzamiento que usan las pruebas de UI.
     enum LaunchArgument {
@@ -35,14 +36,17 @@ struct AppContainer {
         }
 
         let settingsRepository = DataAssembly.makeSettingsRepository(defaults: defaults(isUITesting: isUITesting))
+        let dateProvider = SystemDateProvider()
 
         return AppContainer(
             observeNotes: ObserveNotesUseCase(repository: noteRepository),
             seedSampleNotes: SeedSampleNotesUseCase(
                 notes: noteRepository,
                 settings: settingsRepository,
-                dateProvider: SystemDateProvider()
-            )
+                dateProvider: dateProvider
+            ),
+            // Mismo repositorio que la lista: con `-UITestingLoadFailure` también fallan los guardados (spec 002, RF-38).
+            saveNote: SaveNoteUseCase(repository: noteRepository, dateProvider: dateProvider)
         )
     }
 

@@ -26,10 +26,12 @@ struct NoteEditorScreen: View {
                 .padding(.bottom, 24)
             }
             .scrollDismissesKeyboard(.interactively)
+            // En el ScrollView y no en el contenedor: si no, sustituye los identificadores
+            // de las barras superior e inferior (como en `NoteListScreen`).
+            .accessibilityIdentifier(NoteEditorAccessibilityID.screen)
             bottomBar
         }
         .background(Palette.background.ignoresSafeArea())
-        .accessibilityIdentifier(NoteEditorAccessibilityID.screen)
         .alert(
             Text("No se pudieron guardar los cambios", bundle: .module),
             isPresented: Binding(

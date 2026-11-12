@@ -11,17 +11,20 @@ import SwiftUI
 @main
 struct NotesAppApp: App {
     private let container = AppContainer.make()
+    @State private var path: [NotesDestination] = []
 
     var body: some Scene {
         WindowGroup {
-            NavigationStack {
+            NavigationStack(path: $path) {
                 NoteListRoute(
                     observeNotes: container.observeNotes,
                     seedSampleNotes: container.seedSampleNotes,
-                    // Provisional hasta el paso 5 del plan 002, que añade la navegación al editor.
-                    onOpen: { _ in }
+                    onOpen: { path.append($0) }
                 )
                 .toolbar(.hidden, for: .navigationBar)
+                .navigationDestination(for: NotesDestination.self) { destination in
+                    NoteEditorRoute(destination: destination, saveNote: container.saveNote)
+                }
             }
         }
     }
