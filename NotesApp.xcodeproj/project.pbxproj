@@ -6,8 +6,26 @@
 	objectVersion = 110;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		B10000000000000000000006 /* Common in Frameworks */ = {isa = PBXBuildFile; productRef = B10000000000000000000002 /* Common */; };
+		B10000000000000000000007 /* Domain in Frameworks */ = {isa = PBXBuildFile; productRef = B10000000000000000000003 /* Domain */; };
+		B10000000000000000000008 /* Data in Frameworks */ = {isa = PBXBuildFile; productRef = B10000000000000000000004 /* Data */; };
+		B10000000000000000000009 /* Presentation in Frameworks */ = {isa = PBXBuildFile; productRef = B10000000000000000000005 /* Presentation */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		B10000000000000000000010 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A0C3637930A250F100228415 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A0C3638030A250F100228415;
+			remoteInfo = NotesApp;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		A0C3638130A250F100228415 /* NotesApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NotesApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B1000000000000000000000A /* NotesAppUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = NotesAppUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -16,10 +34,24 @@
 			path = NotesApp;
 			sourceTree = "<group>";
 		};
+		B1000000000000000000000B /* NotesAppUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = NotesAppUITests;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		A0C3637E30A250F100228415 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+				B10000000000000000000006 /* Common in Frameworks */,
+				B10000000000000000000007 /* Domain in Frameworks */,
+				B10000000000000000000008 /* Data in Frameworks */,
+				B10000000000000000000009 /* Presentation in Frameworks */,
+			);
+		};
+		B1000000000000000000000D /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			files = (
 			);
@@ -31,6 +63,7 @@
 			isa = PBXGroup;
 			children = (
 				A0C3638330A250F100228415 /* NotesApp */,
+				B1000000000000000000000B /* NotesAppUITests */,
 				A0C3638230A250F100228415 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -39,6 +72,7 @@
 			isa = PBXGroup;
 			children = (
 				A0C3638130A250F100228415 /* NotesApp.app */,
+				B1000000000000000000000A /* NotesAppUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -60,9 +94,36 @@
 				A0C3638330A250F100228415 /* NotesApp */,
 			);
 			name = NotesApp;
+			packageProductDependencies = (
+				B10000000000000000000002 /* Common */,
+				B10000000000000000000003 /* Domain */,
+				B10000000000000000000004 /* Data */,
+				B10000000000000000000005 /* Presentation */,
+			);
 			productName = NotesApp;
 			productReference = A0C3638130A250F100228415 /* NotesApp.app */;
 			productType = "com.apple.product-type.application";
+		};
+		B1000000000000000000000F /* NotesAppUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B10000000000000000000012 /* Build configuration list for PBXNativeTarget "NotesAppUITests" */;
+			buildPhases = (
+				B1000000000000000000000C /* Sources */,
+				B1000000000000000000000D /* Frameworks */,
+				B1000000000000000000000E /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				B10000000000000000000011 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				B1000000000000000000000B /* NotesAppUITests */,
+			);
+			name = NotesAppUITests;
+			productName = NotesAppUITests;
+			productReference = B1000000000000000000000A /* NotesAppUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 /* End PBXNativeTarget section */
 
@@ -77,6 +138,10 @@
 					A0C3638030A250F100228415 = {
 						CreatedOnToolsVersion = 27.1;
 					};
+					B1000000000000000000000F = {
+						CreatedOnToolsVersion = 27.1;
+						TestTargetID = A0C3638030A250F100228415;
+					};
 				};
 			};
 			buildConfigurationList = A0C3637C30A250F100228415 /* Build configuration list for PBXProject "NotesApp" */;
@@ -88,18 +153,27 @@
 			);
 			mainGroup = A0C3637830A250F100228415;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				B10000000000000000000001 /* XCLocalSwiftPackageReference "Packages/NotesKit" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = A0C3638230A250F100228415 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
 				A0C3638030A250F100228415 /* NotesApp */,
+				B1000000000000000000000F /* NotesAppUITests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		A0C3637F30A250F100228415 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+			);
+		};
+		B1000000000000000000000E /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			files = (
 			);
@@ -112,7 +186,20 @@
 			files = (
 			);
 		};
+		B1000000000000000000000C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+			);
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		B10000000000000000000011 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A0C3638030A250F100228415 /* NotesApp */;
+			targetProxy = B10000000000000000000010 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		A0C3638A30A250F200228415 /* Debug configuration for PBXProject "NotesApp" */ = {
@@ -300,6 +387,46 @@
 			};
 			name = Release;
 		};
+		B10000000000000000000013 /* Debug configuration for PBXNativeTarget "NotesAppUITests" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = QU9QBFK65P;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = eduardoAlberto.NotesAppUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = NotesApp;
+			};
+			name = Debug;
+		};
+		B10000000000000000000014 /* Release configuration for PBXNativeTarget "NotesAppUITests" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = QU9QBFK65P;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = eduardoAlberto.NotesAppUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = NotesApp;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -319,7 +446,45 @@
 			);
 			defaultConfigurationName = Release;
 		};
+		B10000000000000000000012 /* Build configuration list for PBXNativeTarget "NotesAppUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B10000000000000000000013 /* Debug configuration for PBXNativeTarget "NotesAppUITests" */,
+				B10000000000000000000014 /* Release configuration for PBXNativeTarget "NotesAppUITests" */,
+			);
+			defaultConfigurationName = Release;
+		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		B10000000000000000000001 /* XCLocalSwiftPackageReference "Packages/NotesKit" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/NotesKit;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		B10000000000000000000002 /* Common */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B10000000000000000000001 /* XCLocalSwiftPackageReference "Packages/NotesKit" */;
+			productName = Common;
+		};
+		B10000000000000000000003 /* Domain */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B10000000000000000000001 /* XCLocalSwiftPackageReference "Packages/NotesKit" */;
+			productName = Domain;
+		};
+		B10000000000000000000004 /* Data */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B10000000000000000000001 /* XCLocalSwiftPackageReference "Packages/NotesKit" */;
+			productName = Data;
+		};
+		B10000000000000000000005 /* Presentation */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B10000000000000000000001 /* XCLocalSwiftPackageReference "Packages/NotesKit" */;
+			productName = Presentation;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = A0C3637930A250F100228415 /* Project object */;
 	validationLevel = 1;
