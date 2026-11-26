@@ -12,6 +12,8 @@ import SwiftUI
 struct NotesAppApp: App {
     private let container = AppContainer.make()
     @State private var path: [NotesDestination] = []
+    /// Última nota eliminada en el editor: la lista ofrece "Deshacer" (spec 003, RF-10).
+    @State private var lastDeletion: NoteDeletion?
 
     var body: some Scene {
         WindowGroup {
@@ -20,6 +22,7 @@ struct NotesAppApp: App {
                     observeNotes: container.observeNotes,
                     seedSampleNotes: container.seedSampleNotes,
                     restoreNote: container.restoreNote,
+                    deletion: lastDeletion,
                     onOpen: { path.append($0) }
                 )
                 .toolbar(.hidden, for: .navigationBar)
@@ -28,8 +31,7 @@ struct NotesAppApp: App {
                         destination: destination,
                         saveNote: container.saveNote,
                         deleteNote: container.deleteNote,
-                        // Se conecta con "Mis notas" en el paso 4 del plan 003 (T-24).
-                        onDeleted: { _ in }
+                        onDeleted: { lastDeletion = NoteDeletion(note: $0) }
                     )
                 }
             }
