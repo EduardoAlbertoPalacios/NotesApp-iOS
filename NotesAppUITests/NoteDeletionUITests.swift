@@ -311,24 +311,91 @@ final class NoteDeletionUITests: XCTestCase {
         XCTAssertTrue(waitForNonExistence(of: element(ID.titleField, in: app)), app.debugDescription)
     }
 
-    /// Abre el menú ⋯ y elige "Eliminar nota".
-    private func tapDeleteInMoreMenu(in app: XCUIApplication) {
-        element(ID.moreButton, in: app).tap()
+    /// Abre el menú ⋯ y elige "Eliminar nota" tocando el elemento del menú (nunca una coordenada).
+    ///
+    /// El menú se anima y su opción queda en la zona de la barra superior, sobre el botón de volver:
+    /// si se toca antes de que sea tocable, o el menú ya se ha cerrado, el toque cae en "volver". Por
+    /// eso se espera a que la opción exista y sea tocable, y si no lo es se reintenta abrir el menú
+    /// una vez.
+    private func tapDeleteInMoreMenu(in app: XCUIApplication, file: StaticString = #filePath, line: UInt = #line) {
+        let moreButton = element(ID.moreButton, in: app)
         let deleteItem = element(ID.deleteMenuItem, in: app)
-        XCTAssertTrue(deleteItem.waitForExistence(timeout: timeout), app.debugDescription)
-        deleteItem.tap()
+        let maxAttempts = 2
+        for attempt in 1...maxAttempts {
+            XCTAssertTrue(
+                waitUntilHittable(moreButton),
+                "El botón ⋯ no es tocable (intento \(attempt)).\n\(app.debugDescription)",
+                file: file, line: line
+            )
+            moreButton.tap()
+            if waitUntilHittable(deleteItem) {
+                deleteItem.tap()
+                return
+            }
+            // El menú no llegó a mostrarse (o se cerró): si quedó a medias, se cierra antes de reintentar.
+            if deleteItem.exists {
+                app.windows.firstMatch.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.75)).tap()
+                _ = deleteItem.waitForNonExistence(timeout: timeout)
+            }
+        }
+        XCTFail(
+            "La opción \"Eliminar nota\" del menú ⋯ no apareció tocable tras \(maxAttempts) intentos.\n"
+                + app.debugDescription,
+            file: file, line: line
+        )
     }
 
     /// Elimina la nota abierta y espera a volver a "Mis notas". Si se espera el aviso, lo busca
-    /// antes que nada: caduca a los 5 s y cada consulta de XCUITest tarda alrededor de 1 s.
-    private func deleteOpenNote(in app: XCUIApplication, expectingBanner: Bool) {
-        tapDeleteInMoreMenu(in: app)
+    /// antes que nada: caduca a los 5 s y cada consulta de XCUITest tarda alrededor de 1 s. Solo si
+    /// no aparece se diagnostica dónde quedó la app.
+    private func deleteOpenNote(
+        in app: XCUIApplication,
+        expectingBanner: Bool,
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) {
+        tapDeleteInMoreMenu(in: app, file: file, line: line)
         if expectingBanner {
-            XCTAssertTrue(element(ID.undoBanner, in: app).waitForExistence(timeout: timeout), app.debugDescription)
+            guard !element(ID.undoBanner, in: app).waitForExistence(timeout: timeout) else { return }
+            XCTFail(bannerMissingReason(in: app), file: file, line: line)
         } else {
-            XCTAssertTrue(element(ID.listCounter, in: app).waitForExistence(timeout: timeout), app.debugDescription)
-            XCTAssertTrue(waitForNonExistence(of: element(ID.titleField, in: app)), app.debugDescription)
+            XCTAssertTrue(
+                element(ID.listCounter, in: app).waitForExistence(timeout: timeout),
+                "Tras \"Eliminar nota\" no se volvió a \"Mis notas\".\n\(app.debugDescription)",
+                file: file, line: line
+            )
+            XCTAssertTrue(
+                waitForNonExistence(of: element(ID.titleField, in: app)),
+                "Tras \"Eliminar nota\" el editor sigue visible.\n\(app.debugDescription)",
+                file: file, line: line
+            )
         }
+    }
+
+    /// Explica por qué no apareció el aviso "Nota eliminada" según la pantalla en la que quedó la app.
+    private func bannerMissingReason(in app: XCUIApplication) -> String {
+        let tree = app.debugDescription
+        guard let screen = try? app.snapshot() else {
+            return "No apareció el aviso \"Nota eliminada\" y no se pudo leer la pantalla.\n\(tree)"
+        }
+        let inList = contains(identifier: ID.listCounter, in: screen)
+        let inEditor = contains(identifier: ID.titleField, in: screen)
+        let cardCount = findAll(ID.listCard, in: screen).count
+        if inList && !inEditor {
+            return "El toque en \"Eliminar nota\" no llegó al menú: la app volvió a \"Mis notas\" sin aviso "
+                + "y con \(cardCount) tarjetas (probablemente el toque cayó en \"volver\").\n\(tree)"
+        }
+        if inEditor {
+            return "Tras tocar \"Eliminar nota\" la app sigue en el editor y no apareció el aviso.\n\(tree)"
+        }
+        return "No apareció el aviso \"Nota eliminada\" tras tocar \"Eliminar nota\".\n\(tree)"
+    }
+
+    /// Espera a que el elemento exista y sea tocable (`isHittable`), sin `sleep`.
+    private func waitUntilHittable(_ element: XCUIElement) -> Bool {
+        let predicate = NSPredicate(format: "exists == true AND hittable == true")
+        let expectation = XCTNSPredicateExpectation(predicate: predicate, object: element)
+        return XCTWaiter().wait(for: [expectation], timeout: timeout) == .completed
     }
 
     // MARK: - Instantáneas (una sola consulta a la app)
