@@ -12,7 +12,7 @@ _Última actualización: 2026-11-26_
 - **Spec 001 aprobada (2026-11-09):** `docs/specs/001-listado-notas-cuadricula/spec.md`, pantalla "Mis notas" en cuadrícula (Figma `JyeMmyDAEO1Y52QnwKwgGH`, marcos "Inicio · Mis notas").
 - **Specs 001 y 002 implementadas y fusionadas en `main`** (PR #1, 2026-11-13). Pendiente de la 001: decidir el orden de VoiceOver de las tarjetas (hoy sigue la posición vertical).
 - **Spec 002 aprobada (2026-11-11):** `docs/specs/002-crear-editar-nota/`. Decisiones: color de nota nueva aguamarina, notas de ejemplo sin categoría.
-- **Spec 003 aprobada (2026-11-26):** `docs/specs/003-eliminar-nota/spec.md`. "Eliminar nota" en el menú ⋯ del editor (color normal, como la referencia de Android), sin confirmación; aviso "Nota eliminada" + "Deshacer" 5 s (sin límite con VoiceOver); estado vacío "Aún no tienes notas. Crea la primera.". Plan aprobado (`plan.md`); `tasks.md` (T-00 a T-30) pendiente de revisión; siguiente: T-00, rama `feat/003-delete-note` desde `main`.
+- **Spec 003 (eliminar notas), rama `feat/003-delete-note` sin push:** T-00 a T-28 hechas (2026-11-26). 201 pruebas unitarias + 31 de UI en verde; `architecture-reviewer` sin violaciones pendientes. Falta T-29 (demo manual: VoiceOver, aspecto del aviso y del estado vacío) y T-30 (PR).
 - **Pendiente de crear:** `docs/constitution.md`.
 
 ## Decisiones
@@ -29,6 +29,8 @@ _Última actualización: 2026-11-26_
 - **Persistencia solo con SwiftData.** La skill `room-migration` (Android) está desactivada en `.claude/settings.json`.
 
 ## Errores a evitar
+
+- Pruebas de UI con el aviso "Deshacer" (5 s): cada consulta de XCUITest tarda ~1 s; esperar el aviso nada más volver a la lista y agrupar comprobaciones en un `app.snapshot()`.
 
 - No usar Room ni guías de Android para migraciones; usar `VersionedSchema` + `MigrationStage`.
 - No apuntar a simuladores que no existen (`iPhone 16`/`iPhone 17`); el disponible es `iPhone Duo`.
