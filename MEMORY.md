@@ -12,7 +12,7 @@ _Última actualización: 2026-11-26_
 - **Spec 001 aprobada (2026-11-09):** `docs/specs/001-listado-notas-cuadricula/spec.md`, pantalla "Mis notas" en cuadrícula (Figma `JyeMmyDAEO1Y52QnwKwgGH`, marcos "Inicio · Mis notas").
 - **Specs 001 y 002 implementadas y fusionadas en `main`** (PR #1, 2026-11-13). Pendiente de la 001: decidir el orden de VoiceOver de las tarjetas (hoy sigue la posición vertical).
 - **Spec 002 aprobada (2026-11-11):** `docs/specs/002-crear-editar-nota/`. Decisiones: color de nota nueva aguamarina, notas de ejemplo sin categoría.
-- **Spec 003 (eliminar notas), rama `feat/003-delete-note` sin push:** T-00 a T-28 hechas (2026-11-26). 201 pruebas unitarias + 31 de UI en verde; `architecture-reviewer` sin violaciones pendientes. Falta T-29 (demo manual: VoiceOver, aspecto del aviso y del estado vacío) y T-30 (PR).
+- **Spec 003 (eliminar notas) terminada (2026-11-26)** en `feat/003-delete-note`: 201 pruebas unitarias + 31 de UI en verde, `architecture-reviewer` sin violaciones y demo manual hecha por el usuario. PR abierto hacia `main`. También se quitó el `catch` genérico del guardado automático del editor (spec 002).
 - **Pendiente de crear:** `docs/constitution.md`.
 
 ## Decisiones

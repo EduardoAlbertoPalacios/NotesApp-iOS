@@ -104,9 +104,9 @@ Desglose del [plan 003](plan.md) (aprobado el 2026-11-26). Cada tarea es una uni
 
 - [x] **T-28 · Revisión de arquitectura** — *architecture-reviewer*
   **Hecho cuando:** responde "Sin violaciones de arquitectura" o se corrigen sus hallazgos.
-- [ ] **T-29 · Demo manual** — *tú*
+- [x] **T-29 · Demo manual** — *tú*
   iPhone en claro y oscuro: los flujos de los criterios de finalización de la spec, con VoiceOver (el aviso no caduca y se anuncia) y texto grande. Revisar el aspecto del aviso y del estado vacío (D-5) y la posición de una nota nueva recuperada. iPad pendiente mientras no haya simulador.
-- [ ] **T-30 · Memoria y PR** — *yo*
+- [x] **T-30 · Memoria y PR** — *yo*
   Actualizar `MEMORY.md` y abrir el PR hacia `main` con `/create-pr`.
 
 ## Cobertura de RF
