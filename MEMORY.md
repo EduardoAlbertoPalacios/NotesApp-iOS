@@ -3,16 +3,16 @@
 > Registro breve (máx. ~50 líneas) del estado y las decisiones. Las reglas permanentes van en `CLAUDE.md`.
 > No confundir con la memoria automática de Claude Code (`~/.claude/projects/.../memory/`).
 
-_Última actualización: 2026-11-11_
+_Última actualización: 2026-11-26_
 
 ## Estado actual
 
 - La app muestra la pantalla "Mis notas" (spec 001). Compila y corre en el simulador `iPhone Duo`.
 - `CLAUDE.md` define la arquitectura objetivo (Clean Architecture + MVI, paquete local `NotesKit` con `Presentation`, `Domain`, `Data`, `Common`).
-- **Spec 001 aprobada (2026-11-09):** `docs/specs/001-listado-notas-cuadricula/spec.md`, pantalla "Mis notas" en cuadrícula (Figma `JyeMmyDAEO1Y52QnwKwgGH`, marcos "Inicio · Mis notas"). Siguiente paso: plan de implementación.
-- **Plan 001: pasos 0–5 hechos** en la rama `feat/001-notes-grid` (sin push). 78 pruebas unitarias + 9 de UI en verde; `architecture-reviewer` sin violaciones pendientes. Falta el paso 6: demo manual, decidir el orden de VoiceOver de las tarjetas (hoy sigue la posición vertical, no el orden de las notas) y abrir el PR.
-- **Spec 002 aprobada (2026-11-11):** `docs/specs/002-crear-editar-nota/spec.md`, editor para crear (botón "Nueva nota") y editar (tocar tarjeta) notas, según el marco "Editor" del Figma. Solo texto simple, categoría opcional y fijar; guardado automático tras 1 s sin cambios. Plan y tareas aprobados (`plan.md`, `tasks.md`); las 6 dudas se resolvieron en el plan. Decisiones: color de nota nueva aguamarina, notas de ejemplo sin categoría.
-- **Plan 002: pasos 0–3 hechos** en `feat/002-note-editor` (creada desde `feat/001-notes-grid`, sin push): Domain, Data (esquema V2 + migración ligera) y el editor en Presentation. 142 pruebas unitarias + 9 de UI en verde. Siguiente: paso 4 (abrir el editor desde la lista).
+- **Spec 001 aprobada (2026-11-09):** `docs/specs/001-listado-notas-cuadricula/spec.md`, pantalla "Mis notas" en cuadrícula (Figma `JyeMmyDAEO1Y52QnwKwgGH`, marcos "Inicio · Mis notas").
+- **Specs 001 y 002 implementadas y fusionadas en `main`** (PR #1, 2026-11-13). Pendiente de la 001: decidir el orden de VoiceOver de las tarjetas (hoy sigue la posición vertical).
+- **Spec 002 aprobada (2026-11-11):** `docs/specs/002-crear-editar-nota/`. Decisiones: color de nota nueva aguamarina, notas de ejemplo sin categoría.
+- **Spec 003 aprobada (2026-11-26):** `docs/specs/003-eliminar-nota/spec.md`. "Eliminar nota" en el menú ⋯ del editor (color normal, como la referencia de Android), sin confirmación; aviso "Nota eliminada" + "Deshacer" 5 s (sin límite con VoiceOver); estado vacío "Aún no tienes notas. Crea la primera.". Plan aprobado (`plan.md`); `tasks.md` (T-00 a T-30) pendiente de revisión; siguiente: T-00, rama `feat/003-delete-note` desde `main`.
 - **Pendiente de crear:** `docs/constitution.md`.
 
 ## Decisiones
