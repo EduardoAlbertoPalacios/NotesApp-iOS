@@ -16,7 +16,9 @@ struct NoteListViewModelTests {
                 notes: repository,
                 settings: settings,
                 dateProvider: FixedDateProvider()
-            )
+            ),
+            restoreNote: RestoreNoteUseCase(repository: repository),
+            clock: ManualClock()
         )
     }
 

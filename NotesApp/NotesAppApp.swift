@@ -19,6 +19,7 @@ struct NotesAppApp: App {
                 NoteListRoute(
                     observeNotes: container.observeNotes,
                     seedSampleNotes: container.seedSampleNotes,
+                    restoreNote: container.restoreNote,
                     onOpen: { path.append($0) }
                 )
                 .toolbar(.hidden, for: .navigationBar)

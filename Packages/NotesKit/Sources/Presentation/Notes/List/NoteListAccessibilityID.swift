@@ -14,4 +14,7 @@ enum NoteListAccessibilityID {
     static let error = "noteList.error"
     static let retryButton = "noteList.retryButton"
     static let newNoteButton = "noteList.newNoteButton"
+    static let emptyState = "noteList.emptyState"
+    static let undoBanner = "noteList.undoBanner"
+    static let undoButton = "noteList.undoButton"
 }
