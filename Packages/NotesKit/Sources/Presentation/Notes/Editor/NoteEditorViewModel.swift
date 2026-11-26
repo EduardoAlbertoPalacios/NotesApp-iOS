@@ -115,12 +115,10 @@ final class NoteEditorViewModel {
         guard !isDeleting else { return }
         let clock = clock
         pendingSave = Task { [weak self] in
-            do {
-                try await clock.sleep(for: Self.autosaveDelay)
-            } catch {
-                // Solo lanza `CancellationError`: llegó otro cambio o el usuario volvió. No es un error.
-                return
-            }
+            // `try?` justificado: `Clock.sleep` no usa typed throws y solo falla al cancelarse
+            // (llegó otro cambio o el usuario volvió), lo que se comprueba justo después.
+            try? await clock.sleep(for: Self.autosaveDelay)
+            guard !Task.isCancelled else { return }
             await self?.saveNow()
         }
     }
