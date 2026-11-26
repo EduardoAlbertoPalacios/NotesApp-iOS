@@ -101,12 +101,10 @@ final class NoteListViewModel {
         guard !isVoiceOverRunning else { return }
         let clock = clock
         bannerTimeout = Task { [weak self] in
-            do {
-                try await clock.sleep(for: Self.bannerDuration)
-            } catch {
-                // Solo lanza `CancellationError`: el aviso cambió o se ocultó antes. No es un error.
-                return
-            }
+            // `try?` justificado: `Clock.sleep` no usa typed throws y solo falla al cancelarse
+            // (el aviso cambió o se ocultó antes), lo que se comprueba justo después.
+            try? await clock.sleep(for: Self.bannerDuration)
+            guard !Task.isCancelled else { return }
             self?.hideBanner()
         }
     }
