@@ -23,7 +23,13 @@ struct NotesAppApp: App {
                 )
                 .toolbar(.hidden, for: .navigationBar)
                 .navigationDestination(for: NotesDestination.self) { destination in
-                    NoteEditorRoute(destination: destination, saveNote: container.saveNote)
+                    NoteEditorRoute(
+                        destination: destination,
+                        saveNote: container.saveNote,
+                        deleteNote: container.deleteNote,
+                        // Se conecta con "Mis notas" en el paso 4 del plan 003 (T-24).
+                        onDeleted: { _ in }
+                    )
                 }
             }
         }

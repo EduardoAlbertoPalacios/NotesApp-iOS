@@ -4,6 +4,12 @@ import Foundation
 import Synchronization
 
 final class FakeNoteRepository: NoteRepository {
+    /// Escritura terminada en el repositorio, para comprobar el orden entre guardar y borrar.
+    enum Operation: Equatable {
+        case save([UUID])
+        case delete(UUID)
+    }
+
     private struct State {
         var notes: [Note]
         var readFailure: AppError?
@@ -14,6 +20,9 @@ final class FakeNoteRepository: NoteRepository {
         var deletedIDs: [UUID] = []
         var nextSequenceCallCount = 0
         var saveCallCount = 0
+        var operations: [Operation] = []
+        var isHoldingSaves = false
+        var heldSaves: [CheckedContinuation<Void, Never>] = []
         var scriptedReads: [Result<[Note], AppError>]?
         var finishesStreams: Bool
         var continuations: [UUID: AsyncStream<Result<[Note], AppError>>.Continuation] = [:]
@@ -80,6 +89,31 @@ final class FakeNoteRepository: NoteRepository {
         state.withLock { $0.nextSequenceCallCount }
     }
 
+    /// Escrituras (`save` / `delete`) que terminaron bien, en orden.
+    var operations: [Operation] {
+        state.withLock { $0.operations }
+    }
+
+    /// Llamadas a `save(_:)` suspendidas por `holdSaves()`.
+    var heldSaveCount: Int {
+        state.withLock { $0.heldSaves.count }
+    }
+
+    /// A partir de ahora cada `save(_:)` queda suspendido (guardado "en curso") hasta `releaseSaves()`.
+    func holdSaves() {
+        state.withLock { $0.isHoldingSaves = true }
+    }
+
+    /// Deja de suspender y reanuda los `save(_:)` retenidos.
+    func releaseSaves() {
+        let held = state.withLock { state in
+            state.isHoldingSaves = false
+            defer { state.heldSaves = [] }
+            return state.heldSaves
+        }
+        held.forEach { $0.resume() }
+    }
+
     func failDeletes(with error: AppError?) {
         state.withLock { $0.deleteFailure = error }
     }
@@ -120,6 +154,7 @@ final class FakeNoteRepository: NoteRepository {
             if let failure = state.deleteFailure { throw failure }
             state.notes.removeAll { $0.id == id }
             state.deletedIDs.append(id)
+            state.operations.append(.delete(id))
             let result = state.currentResult
             state.continuations.values.forEach { $0.yield(result) }
         }
@@ -134,6 +169,13 @@ final class FakeNoteRepository: NoteRepository {
     }
 
     func save(_ notes: [Note]) async throws(AppError) {
+        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+            let holds = state.withLock { state in
+                if state.isHoldingSaves { state.heldSaves.append(continuation) }
+                return state.isHoldingSaves
+            }
+            if !holds { continuation.resume() }
+        }
         try state.withLock { (state) throws(AppError) in
             state.saveCallCount += 1
             if let failure = state.saveFailure { throw failure }
@@ -141,6 +183,7 @@ final class FakeNoteRepository: NoteRepository {
                 state.notes.removeAll { $0.id == note.id }
                 state.notes.append(note)
             }
+            state.operations.append(.save(notes.map(\.id)))
             let result = state.currentResult
             state.continuations.values.forEach { $0.yield(result) }
         }

@@ -11,6 +11,8 @@ struct NoteEditorState: Equatable, Sendable {
     var headerDate: Date
     var saveStatus: NoteEditorSaveStatus
     var isDiscardDialogPresented = false
+    /// La eliminación falló: alerta en el editor (spec 003, RF-27 a RF-29).
+    var isDeleteErrorPresented = false
 
     /// Muestra el texto de ayuda "Título" (RF-8).
     var isTitleEmpty: Bool { title.isEmpty }

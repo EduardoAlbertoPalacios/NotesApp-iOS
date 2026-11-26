@@ -16,6 +16,7 @@
     "%@, %@" : {
       "comment" : "Tarea de una tarjeta para VoiceOver: texto de la tarea y su estado (\"Tomates, pendiente\")"
     },
+    "Aceptar" : { },
     "Ayer" : { },
     "Buscar en tus notas" : { },
     "Cargando notas" : { },
@@ -26,6 +27,7 @@
     "Contenido" : { },
     "Descartar cambios" : { },
     "Deshacer" : { },
+    "Eliminar nota" : { },
     "Escribir nota…" : { },
     "Fijada" : { },
     "Fijar nota" : { },
@@ -38,6 +40,7 @@
     "No pudimos cargar tus notas." : { },
     "No se pudieron guardar los cambios" : { },
     "No se pudieron guardar los cambios. Lo que escribiste sigue aquí." : { },
+    "No se pudo eliminar la nota" : { },
     "noteCard.accessibility.separator" : {
       "comment" : "Separa las partes que lee VoiceOver en una tarjeta",
       "localizations" : {

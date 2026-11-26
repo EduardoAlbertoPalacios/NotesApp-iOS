@@ -7,6 +7,7 @@ enum NoteEditorAccessibilityID {
     static let pinButton = "noteEditor.pinButton"
     static let shareButton = "noteEditor.shareButton"
     static let moreButton = "noteEditor.moreButton"
+    static let deleteMenuItem = "noteEditor.menu.delete"
     static let headerCategory = "noteEditor.header.category"
     static let headerDate = "noteEditor.header.date"
     static let titleField = "noteEditor.titleField"

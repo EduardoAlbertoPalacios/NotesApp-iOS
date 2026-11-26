@@ -12,11 +12,14 @@ struct NoteEditorViewModelTests {
     private let repository = FakeNoteRepository()
     /// Fecha que `SaveNoteUseCase` pone a lo que guarda; distinta de la apertura del editor (`Date.fixture`).
     private let savedAt = Date.fixture.addingTimeInterval(120)
+    /// Fecha que `DeleteNoteUseCase` pone a la copia de una nota que nunca se guardó.
+    private let deletedAt = Date.fixture.addingTimeInterval(300)
 
     private func makeViewModel(_ destination: NotesDestination = .newNote) -> NoteEditorViewModel {
         NoteEditorViewModel(
             destination: destination,
             saveNote: SaveNoteUseCase(repository: repository, dateProvider: FixedDateProvider(savedAt)),
+            deleteNote: DeleteNoteUseCase(repository: repository, dateProvider: FixedDateProvider(deletedAt)),
             clock: clock,
             dateProvider: FixedDateProvider(.fixture)
         )
@@ -316,4 +319,230 @@ struct NoteEditorViewModelTests {
 
         #expect(await effects.next() == .close)
     }
+    // MARK: - Eliminar (spec 003)
+
+    @Test("given existing note with unsaved changes when delete tapped then deletes it and emits deleted with the written copy")
+    func deleteExistingNoteEmitsDeletedCopy() async {
+        let note = Note.fixture(
+            title: "Compras", blocks: [.text("Leche")], color: .lavender, category: .work, sequence: 7)
+        let viewModel = makeViewModel(.note(note))
+        var effects = viewModel.effects().makeAsyncIterator()
+        viewModel.send(.titleChanged("Compras del sábado"))
+        viewModel.send(.pinTapped)
+
+        viewModel.send(.deleteTapped)
+
+        let expected = Note(
+            id: note.id,
+            title: "Compras del sábado",
+            blocks: [.text("Leche")],
+            color: .lavender,
+            category: .work,
+            isPinned: true,
+            updatedAt: note.updatedAt,
+            sequence: 7
+        )
+        #expect(await effects.next() == .deleted(expected))
+        #expect(repository.deletedIDs == [note.id])
+        #expect(repository.saveCallCount == 0)
+    }
+
+    @Test("given new note with text never saved when delete tapped then emits deleted copy without deleting")
+    func deleteUnsavedNewNoteEmitsCopy() async throws {
+        let repository = FakeNoteRepository(nextSequence: 4)
+        let viewModel = NoteEditorViewModel(
+            destination: .newNote,
+            saveNote: SaveNoteUseCase(repository: repository, dateProvider: FixedDateProvider(savedAt)),
+            deleteNote: DeleteNoteUseCase(repository: repository, dateProvider: FixedDateProvider(deletedAt)),
+            clock: clock,
+            dateProvider: FixedDateProvider(.fixture)
+        )
+        var effects = viewModel.effects().makeAsyncIterator()
+        viewModel.send(.titleChanged("Compras"))
+        viewModel.send(.textBlockChanged(index: 0, text: "Leche"))
+
+        viewModel.send(.deleteTapped)
+
+        let effect = try #require(await effects.next())
+        guard case .deleted(let copy) = effect else {
+            Issue.record("Se esperaba .deleted y llegó \(effect)")
+            return
+        }
+        #expect(copy.title == "Compras")
+        #expect(copy.blocks == [.text("Leche")])
+        #expect(copy.color == .aqua)
+        #expect(copy.updatedAt == deletedAt)
+        #expect(copy.sequence == 4)
+        #expect(repository.deletedIDs.isEmpty)
+        #expect(repository.saveCallCount == 0)
+    }
+
+    @Test("given empty new note when delete tapped then closes without deleted effect")
+    func deleteEmptyNewNoteCloses() async {
+        let viewModel = makeViewModel()
+        var effects = viewModel.effects().makeAsyncIterator()
+
+        viewModel.send(.deleteTapped)
+
+        #expect(await effects.next() == .close)
+        #expect(repository.deletedIDs.isEmpty)
+        #expect(repository.saveCallCount == 0)
+    }
+
+    @Test("given autosave pending when delete tapped then no save happens after the delete even if the clock advances")
+    func deleteCancelsPendingAutosave() async {
+        let note = Note.fixture(title: "Compras")
+        let viewModel = makeViewModel(.note(note))
+        var effects = viewModel.effects().makeAsyncIterator()
+        viewModel.send(.titleChanged("Compras del sábado"))
+        await waitForScheduledSave()
+
+        viewModel.send(.deleteTapped)
+        #expect(await effects.next() == .deleted(.fixture(id: note.id, title: "Compras del sábado")))
+        viewModel.send(.titleChanged("Otra cosa"))
+        clock.advance(by: .seconds(1))
+        await yieldMany()
+
+        #expect(repository.operations == [.delete(note.id)])
+        #expect(repository.saveCallCount == 0)
+        #expect(clock.sleeperCount == 0)
+    }
+
+    @Test("given a save in progress when delete tapped then deletes only after the save finishes")
+    func deleteWaitsForSaveInProgress() async {
+        let note = Note.fixture(title: "Compras")
+        let viewModel = makeViewModel(.note(note))
+        var effects = viewModel.effects().makeAsyncIterator()
+        repository.holdSaves()
+        viewModel.send(.titleChanged("Compras del sábado"))
+        await waitForScheduledSave()
+        clock.advance(by: .seconds(1))
+        await waitUntil { repository.heldSaveCount == 1 }
+
+        viewModel.send(.deleteTapped)
+        await yieldMany()
+        let deletedWhileSaving = repository.deletedIDs
+        repository.releaseSaves()
+
+        #expect(await effects.next() == .deleted(.fixture(id: note.id, title: "Compras del sábado", updatedAt: savedAt)))
+        #expect(deletedWhileSaving.isEmpty)
+        #expect(repository.operations == [.save([note.id]), .delete(note.id)])
+    }
+
+    @Test("given delete fails when delete tapped then presents error, keeps content and emits nothing")
+    func deleteFailurePresentsError() async {
+        repository.failDeletes(with: .storageUnavailable)
+        let note = Note.fixture(title: "Compras", blocks: [.text("Leche")])
+        let viewModel = makeViewModel(.note(note))
+        let stream = viewModel.effects()
+        viewModel.send(.titleChanged("Compras del sábado"))
+
+        viewModel.send(.deleteTapped)
+        await waitUntil { viewModel.state.isDeleteErrorPresented }
+
+        #expect(viewModel.state.title == "Compras del sábado")
+        #expect(viewModel.state.blocks == [.text("Leche")])
+        #expect(repository.deletedIDs.isEmpty)
+        await expectNoEffect(in: stream, of: viewModel)
+    }
+
+    @Test("given delete failed with unsaved changes when one second passes then autosave saves them")
+    func autosaveResumesAfterDeleteFailure() async throws {
+        repository.failDeletes(with: .storageUnavailable)
+        let note = Note.fixture(title: "Compras")
+        let viewModel = makeViewModel(.note(note))
+        viewModel.send(.titleChanged("Compras del sábado"))
+        viewModel.send(.deleteTapped)
+        await waitUntil { viewModel.state.isDeleteErrorPresented }
+        await waitForScheduledSave()
+
+        clock.advance(by: .seconds(1))
+        await waitUntil { repository.saveCallCount == 1 }
+
+        let saved = try #require(repository.notes.first)
+        #expect(saved.id == note.id)
+        #expect(saved.title == "Compras del sábado")
+    }
+
+    @Test("given delete error presented when dismissed then hides the error")
+    func deleteErrorDismissedHidesError() async {
+        repository.failDeletes(with: .storageUnavailable)
+        let viewModel = makeViewModel(.note(.fixture()))
+        viewModel.send(.deleteTapped)
+        await waitUntil { viewModel.state.isDeleteErrorPresented }
+
+        viewModel.send(.deleteErrorDismissed)
+
+        #expect(viewModel.state.isDeleteErrorPresented == false)
+    }
+
+    @Test("given delete tapped twice in a row then deletes only once")
+    func doubleDeleteTapDeletesOnce() async {
+        let note = Note.fixture()
+        let viewModel = makeViewModel(.note(note))
+        var effects = viewModel.effects().makeAsyncIterator()
+
+        viewModel.send(.deleteTapped)
+        viewModel.send(.deleteTapped)
+
+        #expect(await effects.next() == .deleted(note))
+        await yieldMany()
+        #expect(repository.deletedIDs == [note.id])
+        _ = viewModel.effects()
+        #expect(await effects.next() == nil)
+    }
+
+    @Test("given delete in progress when back tapped then back is ignored")
+    func backIgnoredWhileDeleting() async {
+        let note = Note.fixture(title: "Compras")
+        let viewModel = makeViewModel(.note(note))
+        var effects = viewModel.effects().makeAsyncIterator()
+        viewModel.send(.titleChanged("Compras del sábado"))
+
+        viewModel.send(.deleteTapped)
+        viewModel.send(.backTapped)
+
+        #expect(await effects.next() == .deleted(.fixture(id: note.id, title: "Compras del sábado")))
+        await yieldMany()
+        #expect(repository.saveCallCount == 0)
+        #expect(repository.operations == [.delete(note.id)])
+        _ = viewModel.effects()
+        #expect(await effects.next() == nil)
+    }
+
+    @Test("given back in progress when delete tapped then delete is ignored")
+    func deleteIgnoredWhileLeaving() async {
+        let note = Note.fixture(title: "Compras")
+        let viewModel = makeViewModel(.note(note))
+        var effects = viewModel.effects().makeAsyncIterator()
+        repository.holdSaves()
+        viewModel.send(.titleChanged("Compras del sábado"))
+        viewModel.send(.backTapped)
+        await waitUntil { repository.heldSaveCount == 1 }
+
+        viewModel.send(.deleteTapped)
+        repository.releaseSaves()
+
+        #expect(await effects.next() == .close)
+        await yieldMany()
+        #expect(repository.operations == [.save([note.id])])
+        _ = viewModel.effects()
+        #expect(await effects.next() == nil)
+    }
+
+    @Test("given first effects subscription cancelled when resubscribing then new stream receives deleted")
+    func deletedEffectSurvivesResubscription() async {
+        let note = Note.fixture()
+        let viewModel = makeViewModel(.note(note))
+        let first = viewModel.effects()
+        let consumer = Task { for await _ in first {} }
+        consumer.cancel()
+        await consumer.value
+        var effects = viewModel.effects().makeAsyncIterator()
+
+        viewModel.send(.deleteTapped)
+
+        #expect(await effects.next() == .deleted(note))
+    }
+
 }

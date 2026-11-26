@@ -9,4 +9,8 @@ enum NoteEditorIntent: Equatable, Sendable {
     case backTapped
     case discardConfirmed
     case keepEditingTapped
+    /// Opción "Eliminar nota" del menú ⋯ (spec 003, RF-4).
+    case deleteTapped
+    /// Cierre de la alerta de error al eliminar (spec 003, RF-28).
+    case deleteErrorDismissed
 }
