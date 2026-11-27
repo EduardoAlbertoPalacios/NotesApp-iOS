@@ -3,7 +3,8 @@ import SwiftUI
 
 /// Vista sin estado de "Mis notas". Los controles de búsqueda, filtros, orden y ajustes se dibujan
 /// como vistas estáticas: no tienen función todavía (spec 001, RF-29 a RF-31). "Nueva nota" y las
-/// tarjetas abren el editor (spec 002, RF-1 y RF-4).
+/// tarjetas abren el editor (spec 002, RF-1 y RF-4). Tras eliminar una nota muestra un aviso con
+/// "Deshacer", y sin notas, el estado vacío (spec 003).
 struct NoteListScreen: View {
     let state: NoteListState
     let now: Date
@@ -28,9 +29,58 @@ struct NoteListScreen: View {
             }
             // En el ScrollView y no en el contenedor: si no, sustituye el identificador de "Nueva nota".
             .accessibilityIdentifier(NoteListAccessibilityID.screen)
-            .overlay(alignment: .bottomTrailing) { newNoteButton }
+            .overlay(alignment: .bottomTrailing) {
+                VStack(alignment: .trailing, spacing: 12) {
+                    if let banner = state.banner {
+                        bannerView(banner)
+                            .padding(.horizontal, 24)
+                            .transition(.move(edge: .bottom).combined(with: .opacity))
+                    }
+                    newNoteButton
+                }
+                .animation(.easeInOut(duration: 0.2), value: state.banner)
+            }
         }
         .background(Palette.background.ignoresSafeArea())
+        .onChange(of: state.banner) { _, banner in
+            // Anuncio para VoiceOver al aparecer el aviso (spec 003, RF-32).
+            if case .deleted = banner {
+                AccessibilityNotification.Announcement(String(localized: "Nota eliminada", bundle: .module)).post()
+            }
+        }
+    }
+
+    // MARK: - Aviso tras eliminar (spec 003)
+
+    /// Cápsula sobre "Nueva nota". Solo ocupa su tamaño: el resto de la pantalla se puede desplazar (RF-11).
+    private func bannerView(_ banner: NoteListBanner) -> some View {
+        HStack(spacing: 16) {
+            switch banner {
+            case .deleted:
+                Text("Nota eliminada", bundle: .module)
+                Spacer(minLength: 0)
+                Button {
+                    onIntent(.undoTapped)
+                } label: {
+                    Text("Deshacer", bundle: .module)
+                        .fontWeight(.bold)
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier(NoteListAccessibilityID.undoButton)
+            case .restoreFailed:
+                Text("No se pudo recuperar la nota", bundle: .module)
+                Spacer(minLength: 0)
+            }
+        }
+        .font(.subheadline)
+        .foregroundStyle(Palette.textPrimary)
+        .padding(.horizontal, 20)
+        .padding(.vertical, 14)
+        .frame(maxWidth: .infinity, minHeight: 50)
+        .background(Palette.surface, in: Capsule())
+        .shadow(color: .black.opacity(0.12), radius: 12, y: 4)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier(NoteListAccessibilityID.undoBanner)
     }
 
     // MARK: - Cabecera y controles
@@ -140,6 +190,8 @@ struct NoteListScreen: View {
             }
             .frame(maxWidth: .infinity, minHeight: 200)
             .accessibilityIdentifier(NoteListAccessibilityID.loading)
+        } else if state.isEmpty {
+            emptyView
         } else {
             AlternatingColumnsLayout(
                 columns: GridColumns.count(
@@ -163,6 +215,22 @@ struct NoteListScreen: View {
             .accessibilityElement(children: .contain)
             .accessibilityIdentifier(NoteListAccessibilityID.grid)
         }
+    }
+
+    /// Sin notas (spec 003, RF-24); "Nueva nota" sigue visible encima (RF-25).
+    private var emptyView: some View {
+        VStack(spacing: 6) {
+            Text("Aún no tienes notas.", bundle: .module)
+                .font(.title3.weight(.semibold))
+                .foregroundStyle(Palette.textPrimary)
+            Text("Crea la primera.", bundle: .module)
+                .font(.body)
+                .foregroundStyle(Palette.textSecondary)
+        }
+        .multilineTextAlignment(.center)
+        .frame(maxWidth: .infinity, minHeight: 240)
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier(NoteListAccessibilityID.emptyState)
     }
 
     private var errorView: some View {
@@ -205,6 +273,17 @@ private enum PreviewData {
     }
 
     static let loaded = NoteListState(isLoading: false, notes: notes)
+
+    static var deletedBanner: NoteListState {
+        let notes = notes
+        return NoteListState(isLoading: false, notes: Array(notes.dropFirst()), banner: .deleted(notes[0]))
+    }
+
+    static var emptyWithBanner: NoteListState {
+        NoteListState(isLoading: false, banner: .deleted(notes[0]))
+    }
+
+    static let restoreFailed = NoteListState(isLoading: false, notes: notes, banner: .restoreFailed)
 }
 
 #Preview("Con notas") {
@@ -220,9 +299,35 @@ private enum PreviewData {
     NoteListScreen(state: NoteListState(), now: PreviewData.now, isPad: false, onIntent: { _ in })
 }
 
-/// No puede ocurrir en la spec 001 (no se borran notas), pero `CLAUDE.md` pide una preview por estado.
 #Preview("Vacío") {
     NoteListScreen(state: NoteListState(isLoading: false), now: PreviewData.now, isPad: false, onIntent: { _ in })
+}
+
+#Preview("Vacío · oscuro") {
+    NoteListScreen(state: NoteListState(isLoading: false), now: PreviewData.now, isPad: false, onIntent: { _ in })
+        .preferredColorScheme(.dark)
+}
+
+#Preview("Vacío con aviso") {
+    NoteListScreen(state: PreviewData.emptyWithBanner, now: PreviewData.now, isPad: false, onIntent: { _ in })
+}
+
+#Preview("Nota eliminada") {
+    NoteListScreen(state: PreviewData.deletedBanner, now: PreviewData.now, isPad: false, onIntent: { _ in })
+}
+
+#Preview("Nota eliminada · oscuro") {
+    NoteListScreen(state: PreviewData.deletedBanner, now: PreviewData.now, isPad: false, onIntent: { _ in })
+        .preferredColorScheme(.dark)
+}
+
+#Preview("Error al deshacer") {
+    NoteListScreen(state: PreviewData.restoreFailed, now: PreviewData.now, isPad: false, onIntent: { _ in })
+}
+
+#Preview("Nota eliminada · texto grande") {
+    NoteListScreen(state: PreviewData.deletedBanner, now: PreviewData.now, isPad: false, onIntent: { _ in })
+        .dynamicTypeSize(.accessibility2)
 }
 
 #Preview("Error") {

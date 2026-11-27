@@ -18,12 +18,10 @@ public struct SaveNoteUseCase: Sendable {
     ///   - draft: lo que hay en el editor.
     ///   - lastSaved: la última versión guardada de esa nota, o `nil` si nunca se guardó.
     public func callAsFunction(_ draft: NoteDraft, lastSaved: Note?) async throws(AppError) -> NoteSaveResult {
-        let title = draft.title.trimmingCharacters(in: .whitespacesAndNewlines)
-        // Los bloques de texto en blanco no son contenido (por ejemplo, la línea vacía
-        // que el editor añade al final para poder escribir).
-        let blocks = draft.blocks.filter { !$0.isBlankText }
+        let title = draft.cleanedTitle
+        let blocks = draft.cleanedBlocks
 
-        if title.isEmpty && blocks.isEmpty {
+        if draft.isEmptyWhenCleaned {
             // Nueva y ya guardada ⇒ se elimina (RF-33). Nueva sin guardar ⇒ no se crea (RF-32).
             // Existente ⇒ se conserva su última versión guardada (RF-36 y RF-37).
             guard draft.isNew, let lastSaved else { return .skipped }
@@ -61,12 +59,5 @@ public struct SaveNoteUseCase: Sendable {
         )
         try await repository.save([note])
         return .saved(note)
-    }
-}
-
-extension NoteBlock {
-    fileprivate var isBlankText: Bool {
-        guard case .text(let text) = self else { return false }
-        return text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 }

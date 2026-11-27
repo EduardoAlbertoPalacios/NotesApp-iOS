@@ -8,6 +8,8 @@ struct AppContainer {
     let observeNotes: ObserveNotesUseCase
     let seedSampleNotes: SeedSampleNotesUseCase
     let saveNote: SaveNoteUseCase
+    let deleteNote: DeleteNoteUseCase
+    let restoreNote: RestoreNoteUseCase
 
     /// Argumentos de lanzamiento que usan las pruebas de UI.
     enum LaunchArgument {
@@ -46,7 +48,9 @@ struct AppContainer {
                 dateProvider: dateProvider
             ),
             // Mismo repositorio que la lista: con `-UITestingLoadFailure` también fallan los guardados (spec 002, RF-38).
-            saveNote: SaveNoteUseCase(repository: noteRepository, dateProvider: dateProvider)
+            saveNote: SaveNoteUseCase(repository: noteRepository, dateProvider: dateProvider),
+            deleteNote: DeleteNoteUseCase(repository: noteRepository, dateProvider: dateProvider),
+            restoreNote: RestoreNoteUseCase(repository: noteRepository)
         )
     }
 

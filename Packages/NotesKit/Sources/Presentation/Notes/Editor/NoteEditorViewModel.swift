@@ -21,17 +21,21 @@ final class NoteEditorViewModel {
     @ObservationIgnored private var hasUnsavedChanges = false
     @ObservationIgnored private var pendingSave: Task<Void, Never>?
     @ObservationIgnored private var isLeaving = false
+    @ObservationIgnored private var isDeleting = false
 
     private let saveNote: SaveNoteUseCase
+    private let deleteNote: DeleteNoteUseCase
     private let clock: any Clock<Duration>
 
     init(
         destination: NotesDestination,
         saveNote: SaveNoteUseCase,
+        deleteNote: DeleteNoteUseCase,
         clock: any Clock<Duration>,
         dateProvider: any DateProvider
     ) {
         self.saveNote = saveNote
+        self.deleteNote = deleteNote
         self.clock = clock
         state = .initial(for: destination, now: dateProvider.now())
         switch destination {
@@ -75,9 +79,15 @@ final class NoteEditorViewModel {
             state.isPinned.toggle()
             contentChanged()
         case .backTapped:
-            guard !isLeaving else { return }
+            guard !isLeaving, !isDeleting else { return }
             isLeaving = true
             Task { await leave() }
+        case .deleteTapped:
+            guard !isLeaving, !isDeleting else { return }
+            isDeleting = true
+            Task { await delete() }
+        case .deleteErrorDismissed:
+            state.isDeleteErrorPresented = false
         case .discardConfirmed:
             state.isDiscardDialogPresented = false
             pendingSave?.cancel()
@@ -101,14 +111,14 @@ final class NoteEditorViewModel {
     /// Reinicia la espera: varios cambios seguidos se guardan juntos (RF-21).
     private func scheduleSave() {
         pendingSave?.cancel()
+        // Durante una eliminación no se guarda; si falla, `delete()` vuelve a programar el guardado.
+        guard !isDeleting else { return }
         let clock = clock
         pendingSave = Task { [weak self] in
-            do {
-                try await clock.sleep(for: Self.autosaveDelay)
-            } catch {
-                // Solo lanza `CancellationError`: llegó otro cambio o el usuario volvió. No es un error.
-                return
-            }
+            // `try?` justificado: `Clock.sleep` no usa typed throws y solo falla al cancelarse
+            // (llegó otro cambio o el usuario volvió), lo que se comprueba justo después.
+            try? await clock.sleep(for: Self.autosaveDelay)
+            guard !Task.isCancelled else { return }
             await self?.saveNow()
         }
     }
@@ -141,14 +151,44 @@ final class NoteEditorViewModel {
         return true
     }
 
+    /// Eliminar desde el menú ⋯ (spec 003, RF-4, RF-8, RF-9, RF-27 a RF-29).
+    private func delete() async {
+        // Sin guardado automático pendiente ni en curso: si no, podría volver a crear la nota tras borrarla.
+        await settlePendingSave()
+        let result: NoteDeletionResult
+        do {
+            result = try await deleteNote(currentDraft(), lastSaved: lastSaved)
+        } catch {
+            // `error` es `AppError` (typed throws). La nota y lo escrito quedan intactos (RF-29).
+            isDeleting = false
+            state.isDeleteErrorPresented = true
+            // Lo escrito sigue sin guardar: se vuelve a programar el guardado automático.
+            if hasUnsavedChanges { scheduleSave() }
+            return
+        }
+        // Tras eliminar, `isDeleting` sigue activo: la pantalla se cierra y ningún cambio
+        // posterior debe programar un guardado que vuelva a crear la nota.
+        switch result {
+        case .deleted(let note):
+            emit(.deleted(note))
+        case .discarded:
+            emit(.close)
+        }
+    }
+
+    /// Cancela la espera del guardado automático y aguarda a que termine un guardado en curso.
+    private func settlePendingSave() async {
+        let waiting = pendingSave
+        waiting?.cancel()
+        await waiting?.value
+        pendingSave = nil
+    }
+
     /// Volver: guarda lo pendiente y cierra; si no se puede guardar, pregunta si descartar (RF-25, RF-42).
     private func leave() async {
         defer { isLeaving = false }
-        let waiting = pendingSave
-        waiting?.cancel()
         // Si la espera ya terminó y está guardando, se aguarda a que acabe para no guardar dos veces a la vez.
-        await waiting?.value
-        pendingSave = nil
+        await settlePendingSave()
         if await saveNow() {
             emit(.close)
         } else {

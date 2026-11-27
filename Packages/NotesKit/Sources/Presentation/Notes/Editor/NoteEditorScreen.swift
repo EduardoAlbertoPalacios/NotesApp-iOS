@@ -1,8 +1,9 @@
 import Domain
 import SwiftUI
 
-/// Vista sin estado del editor (Figma "Editor"). Compartir, el menú ⋯ y la barra inferior se
-/// dibujan como vistas estáticas: no tienen función en esta iteración (RF-45, RF-46).
+/// Vista sin estado del editor (Figma "Editor"). Compartir y la barra inferior se dibujan como
+/// vistas estáticas: no tienen función en esta iteración (spec 002, RF-45, RF-46). El menú ⋯
+/// solo ofrece "Eliminar nota" (spec 003, RF-1 a RF-3).
 struct NoteEditorScreen: View {
     let state: NoteEditorState
     let now: Date
@@ -54,6 +55,21 @@ struct NoteEditorScreen: View {
         } message: {
             Text("Si sales ahora, perderás lo que no se pudo guardar.", bundle: .module)
         }
+        .alert(
+            Text("No se pudo eliminar la nota", bundle: .module),
+            isPresented: Binding(
+                get: { state.isDeleteErrorPresented },
+                set: { isPresented in
+                    if !isPresented, state.isDeleteErrorPresented { onIntent(.deleteErrorDismissed) }
+                }
+            )
+        ) {
+            Button(role: .cancel) {
+                onIntent(.deleteErrorDismissed)
+            } label: {
+                Text("Aceptar", bundle: .module)
+            }
+        }
     }
 
     // MARK: - Barra superior
@@ -82,10 +98,27 @@ struct NoteEditorScreen: View {
             .accessibilityIdentifier(NoteEditorAccessibilityID.pinButton)
 
             staticIcon("square.and.arrow.up", label: "Compartir", id: NoteEditorAccessibilityID.shareButton)
-            staticIcon("ellipsis", label: "Más opciones", id: NoteEditorAccessibilityID.moreButton)
+            moreMenu
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 4)
+    }
+
+    /// Menú ⋯ con una sola opción, en el color de texto normal como en la referencia de Android:
+    /// sin `role: .destructive`, que la pintaría en rojo (spec 003, RF-1, RF-2).
+    private var moreMenu: some View {
+        Menu {
+            Button {
+                onIntent(.deleteTapped)
+            } label: {
+                Text("Eliminar nota", bundle: .module)
+            }
+            .accessibilityIdentifier(NoteEditorAccessibilityID.deleteMenuItem)
+        } label: {
+            barIcon("ellipsis")
+        }
+        .accessibilityLabel(Text("Más opciones", bundle: .module))
+        .accessibilityIdentifier(NoteEditorAccessibilityID.moreButton)
     }
 
     private func barIcon(_ systemName: String) -> some View {
@@ -321,6 +354,12 @@ private enum EditorPreviewData {
         return state
     }
 
+    static var deleteError: NoteEditorState {
+        var state = withText
+        state.isDeleteErrorPresented = true
+        return state
+    }
+
     static var discardDialog: NoteEditorState {
         var state = failed
         state.isDiscardDialogPresented = true
@@ -350,6 +389,15 @@ private enum EditorPreviewData {
 
 #Preview("Diálogo de descarte") {
     NoteEditorScreen(state: EditorPreviewData.discardDialog, now: EditorPreviewData.now, onIntent: { _ in })
+}
+
+#Preview("Error al eliminar") {
+    NoteEditorScreen(state: EditorPreviewData.deleteError, now: EditorPreviewData.now, onIntent: { _ in })
+}
+
+#Preview("Error al eliminar · Oscuro") {
+    NoteEditorScreen(state: EditorPreviewData.deleteError, now: EditorPreviewData.now, onIntent: { _ in })
+        .preferredColorScheme(.dark)
 }
 
 #Preview("Texto grande") {

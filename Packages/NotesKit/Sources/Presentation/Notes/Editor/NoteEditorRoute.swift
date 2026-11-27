@@ -6,10 +6,14 @@ import SwiftUI
 public struct NoteEditorRoute: View {
     @State private var viewModel: NoteEditorViewModel
     @Environment(\.dismiss) private var dismiss
+    private let onDeleted: @MainActor (Note) -> Void
 
+    /// - Parameter onDeleted: recibe la copia de la nota eliminada, para ofrecer "Deshacer" en "Mis notas" (spec 003).
     public init(
         destination: NotesDestination,
         saveNote: SaveNoteUseCase,
+        deleteNote: DeleteNoteUseCase,
+        onDeleted: @escaping @MainActor (Note) -> Void,
         clock: any Clock<Duration> = ContinuousClock(),
         dateProvider: any DateProvider = SystemDateProvider()
     ) {
@@ -17,10 +21,12 @@ public struct NoteEditorRoute: View {
             initialValue: NoteEditorViewModel(
                 destination: destination,
                 saveNote: saveNote,
+                deleteNote: deleteNote,
                 clock: clock,
                 dateProvider: dateProvider
             )
         )
+        self.onDeleted = onDeleted
     }
 
     public var body: some View {
@@ -36,6 +42,9 @@ public struct NoteEditorRoute: View {
             for await effect in viewModel.effects() {
                 switch effect {
                 case .close:
+                    dismiss()
+                case .deleted(let note):
+                    onDeleted(note)
                     dismiss()
                 }
             }
