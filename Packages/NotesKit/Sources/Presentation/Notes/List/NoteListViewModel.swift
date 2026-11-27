@@ -7,6 +7,8 @@ import Observation
 final class NoteListViewModel {
     /// Tiempo que se muestra el aviso tras eliminar, con VoiceOver desactivado (spec 003, RF-12).
     static let bannerDuration: Duration = .seconds(5)
+    /// Tiempo sin cambios en el buscador antes de anunciar el resultado a VoiceOver (spec 004, RF-42).
+    static let announcementDelay: Duration = .seconds(1)
 
     private(set) var state = NoteListState()
     /// Cambia con cada reintento; la Route lo usa como `id` de su `.task` para reiniciar la carga.
@@ -16,6 +18,7 @@ final class NoteListViewModel {
     @ObservationIgnored private var lastDeletionID: UUID?
     @ObservationIgnored private var isVoiceOverRunning = false
     @ObservationIgnored private var bannerTimeout: Task<Void, Never>?
+    @ObservationIgnored private var pendingAnnouncement: Task<Void, Never>?
 
     private let observeNotes: ObserveNotesUseCase
     private let seedSampleNotes: SeedSampleNotesUseCase
@@ -68,6 +71,51 @@ final class NoteListViewModel {
             if state.banner != nil { scheduleBannerTimeout() }
         case .movedToBackground:
             hideBanner()
+        case .searchTextChanged(let text):
+            // Se acepta también cargando o con error: se aplica al llegar las notas (spec 004, RF-37, RF-38).
+            guard text != state.searchText else { return }
+            setSearchText(text)
+        case .clearSearchTapped:
+            guard !state.searchText.isEmpty else { return }
+            setSearchText("")
+        }
+    }
+
+    // MARK: - Búsqueda (spec 004)
+
+    private func setSearchText(_ text: String) {
+        state.searchText = text
+        updateResults()
+        scheduleAnnouncement()
+    }
+
+    /// Vuelve a filtrar con el texto y las notas actuales (RF-1, RF-3, RF-26 a RF-29).
+    private func updateResults() {
+        state.results = state.isSearching ? NoteSearch.filter(state.notes, query: state.searchText) : []
+    }
+
+    /// Cada cambio reinicia la espera: solo se anuncia tras 1 s sin cambios (RF-42 a RF-44).
+    private func scheduleAnnouncement() {
+        pendingAnnouncement?.cancel()
+        pendingAnnouncement = nil
+        guard state.isSearching else { return }
+        let clock = clock
+        pendingAnnouncement = Task { [weak self] in
+            // `try?` justificado: `Clock.sleep` no usa typed throws y solo falla al cancelarse
+            // (el texto volvió a cambiar), lo que se comprueba justo después.
+            try? await clock.sleep(for: Self.announcementDelay)
+            guard !Task.isCancelled else { return }
+            self?.announceResults()
+        }
+    }
+
+    private func announceResults() {
+        // Sin notas cargadas no hay resultado que anunciar (buscador deshabilitado, RF-32 a RF-36).
+        guard state.isSearching, state.isSearchEnabled else { return }
+        if state.hasNoResults {
+            emit(.announce(.noMatches(state.searchText.trimmingCharacters(in: .whitespacesAndNewlines))))
+        } else {
+            emit(.announce(.results(state.results.count)))
         }
     }
 
@@ -131,6 +179,13 @@ final class NoteListViewModel {
                 state.notes = notes
                 state.isLoading = false
                 state.loadError = nil
+                // Sin notas, el buscador se deshabilita: un texto que no se puede borrar no se conserva (RF-33).
+                if notes.isEmpty, !state.searchText.isEmpty {
+                    state.searchText = ""
+                    pendingAnnouncement?.cancel()
+                    pendingAnnouncement = nil
+                }
+                updateResults()
             case .failure:
                 guard !Task.isCancelled else { return }
                 showLoadError()

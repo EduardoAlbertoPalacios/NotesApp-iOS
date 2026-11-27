@@ -39,23 +39,23 @@ Desglose del [plan 004](plan.md) (aprobado el 2026-11-27). Cada tarea es una uni
 
 ## Paso 2 — Presentation (`feat(presentation)`)
 
-- [ ] **T-06 · Estado, intents y efectos** — *yo* · RF-1, RF-15, RF-18, RF-21, RF-32, RF-35, RF-36, RF-42
+- [x] **T-06 · Estado, intents y efectos** — *yo* · RF-1, RF-15, RF-18, RF-21, RF-32, RF-35, RF-36, RF-42
   `NoteListState`: `searchText: String`, `results: [Note]`; derivados `isSearching`, `visibleNotes`, `isSearchEnabled` (cargado, sin error y con notas) y `hasNoResults` (busca, hay notas y sin resultados). `NoteListIntent`: `.searchTextChanged(String)`, `.clearSearchTapped`. `NoteListEffect.announce(NoteListAnnouncement)` con `NoteListAnnouncement` (`.results(Int)`, `.noMatches(String)`).
-- [ ] **T-07 · Búsqueda en `NoteListViewModel`** — *yo* · depende de T-03 y T-06 · RF-1 a RF-4, RF-20 a RF-22, RF-25 a RF-29, RF-33, RF-37, RF-38, RF-42 a RF-44 · D-4, D-6
+- [x] **T-07 · Búsqueda en `NoteListViewModel`** — *yo* · depende de T-03 y T-06 · RF-1 a RF-4, RF-20 a RF-22, RF-25 a RF-29, RF-33, RF-37, RF-38, RF-42 a RF-44 · D-4, D-6
   `.searchTextChanged` guarda el texto (también cargando o con error) y recalcula `results` con `NoteSearch.filter`; `.clearSearchTapped` lo vacía. Cada lista nueva del stream recalcula `results`; si llega vacía con búsqueda activa, vacía `searchText`. Cada cambio del texto reinicia una espera de 1 s con el `Clock`; al terminar, si hay búsqueda, emite `.announce(.results(n))` o `.announce(.noMatches(texto sin espacios exteriores))`. `.noteTapped` y `.newNoteTapped` no tocan la búsqueda. Una cancelación no cambia el estado.
-- [ ] **T-08 · Textos** [P] — *yo* · RF-15, RF-16, RF-18, RF-41
+- [x] **T-08 · Textos** [P] — *yo* · RF-15, RF-16, RF-18, RF-41
   En `Localizable.xcstrings`, solo las claves nuevas: "%lld resultados" (plural: "%lld resultado" / "%lld resultados"), "No hay notas que coincidan con «%@»", "Borrar búsqueda". `NoteListStrings.results(_:)` y `.noMatches(_:)`.
-- [ ] **T-09 · Buscador en `NoteListScreen`** — *yo* · depende de T-06 y T-08 · RF-1, RF-20, RF-21, RF-23, RF-32, RF-35, RF-36, RF-40, RF-41, RF-45
+- [x] **T-09 · Buscador en `NoteListScreen`** — *yo* · depende de T-06 y T-08 · RF-1, RF-20, RF-21, RF-23, RF-32, RF-35, RF-36, RF-40, RF-41, RF-45
   `TextField` con `prompt` "Buscar en tus notas" en la cápsula del Figma, `Binding` a `state.searchText` que envía `.searchTextChanged`, `.submitLabel(.search)` y `.disabled(!state.isSearchEnabled)`. Botón `xmark.circle.fill` visible solo con texto, etiqueta "Borrar búsqueda", envía `.clearSearchTapped`. `NoteListAccessibilityID.searchField` pasa al `TextField`; nuevo `searchClearButton`.
-- [ ] **T-10 · Cabecera, cuadrícula y sin resultados** — *yo* · depende de T-06 y T-08 · RF-15 a RF-19, RF-24, RF-39, RF-45 · D-5
+- [x] **T-10 · Cabecera, cuadrícula y sin resultados** — *yo* · depende de T-06 y T-08 · RF-15 a RF-19, RF-24, RF-39, RF-45 · D-5
   La cabecera muestra `results(count)` mientras busca y `counter` si no. La cuadrícula usa `visibleNotes`. Con `hasNoResults`, vista centrada con `noMatches` en lugar de la cuadrícula (carga, error y estado vacío tienen prioridad). `.scrollDismissesKeyboard(.immediately)` en el `ScrollView`. Filtros sin cambios. Nuevo `NoteListAccessibilityID.noResults`.
-- [ ] **T-11 · Previews** [P] — *yo* · depende de T-09 y T-10
+- [x] **T-11 · Previews** [P] — *yo* · depende de T-09 y T-10
   Buscando con resultados; sin resultados en claro y oscuro; cargando con texto en el buscador deshabilitado; error con buscador deshabilitado; buscando con texto grande.
-- [ ] **T-12 · `NoteListRoute`** — *yo* · depende de T-07 · RF-30, RF-31, RF-42, RF-43 · D-3, D-4
+- [x] **T-12 · `NoteListRoute`** — *yo* · depende de T-07 · RF-30, RF-31, RF-42, RF-43 · D-3, D-4
   `@SceneStorage("noteList.searchText")`: al aparecer, si tiene texto, envía `.searchTextChanged`; al cambiar `state.searchText`, lo actualiza. El efecto `.announce` se traduce con `NoteListStrings` y se publica con `AccessibilityNotification.Announcement`.
-- [ ] **T-13 · Pruebas de Presentation** — *test-writer* · depende de T-07, T-08 y T-12
+- [x] **T-13 · Pruebas de Presentation** — *test-writer* · depende de T-07, T-08 y T-12
   ViewModel con `ManualClock`: filtrar al escribir y al borrar caracteres; solo espacios ⇒ todas; `.clearSearchTapped`; recalcular al llegar notas nuevas (editada que deja de coincidir, alta que coincide o no, borrado, "Deshacer"); conservar el texto tras `.noteTapped`; vaciar la búsqueda al quedarse sin notas; texto recibido cargando o con error y aplicado al cargar; anuncio a 1 s y no antes; cambios seguidos reinician la espera; `.noMatches` sin resultados; sin anuncio con texto vacío; el aviso de "Deshacer" sigue al escribir; re-suscripción a `effects()`. Estado: `isSearching`, `visibleNotes`, `isSearchEnabled`, `hasNoResults`. `NoteListStrings.results` en singular y plural, y `noMatches`.
-- [ ] **T-14 · Cierre del paso 2** — *test-runner* + *yo*
+- [x] **T-14 · Cierre del paso 2** — *test-runner* + *yo*
   **Hecho cuando:** `PresentationTests` en verde, la app compila y commit `feat(presentation): search notes in note list`.
 
 ## Paso 3 — Pruebas de UI (`test(app)`)

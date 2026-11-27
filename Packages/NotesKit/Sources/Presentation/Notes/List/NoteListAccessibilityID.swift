@@ -4,6 +4,8 @@ enum NoteListAccessibilityID {
     static let counter = "noteList.counter"
     static let settingsButton = "noteList.settingsButton"
     static let searchField = "noteList.searchField"
+    static let searchClearButton = "noteList.searchClearButton"
+    static let noResults = "noteList.noResults"
     static let filterAll = "noteList.filter.all"
     static let filterWork = "noteList.filter.work"
     static let filterPersonal = "noteList.filter.personal"

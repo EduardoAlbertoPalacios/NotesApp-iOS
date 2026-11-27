@@ -7,6 +7,9 @@ public struct NoteListRoute: View {
     @State private var viewModel: NoteListViewModel
     @Environment(\.accessibilityVoiceOverEnabled) private var isVoiceOverEnabled
     @Environment(\.scenePhase) private var scenePhase
+    /// iOS lo restaura si el sistema cerró la app en segundo plano y lo descarta si la cerró
+    /// el usuario desde el selector de apps (spec 004, RF-30, RF-31).
+    @SceneStorage("noteList.searchText") private var storedSearchText = ""
     private let deletion: NoteDeletion?
     private let onOpen: @MainActor (NotesDestination) -> Void
 
@@ -53,6 +56,13 @@ public struct NoteListRoute: View {
         .onChange(of: scenePhase) { _, phase in
             if phase == .background { viewModel.send(.movedToBackground) }
         }
+        .onAppear {
+            // Al volver del editor ya coinciden y el ViewModel lo ignora.
+            if !storedSearchText.isEmpty { viewModel.send(.searchTextChanged(storedSearchText)) }
+        }
+        .onChange(of: viewModel.state.searchText) { _, text in
+            storedSearchText = text
+        }
         .task(id: viewModel.reloadToken) {
             await viewModel.start()
         }
@@ -61,6 +71,8 @@ public struct NoteListRoute: View {
                 switch effect {
                 case .open(let destination):
                     onOpen(destination)
+                case .announce(let announcement):
+                    AccessibilityNotification.Announcement(NoteListStrings.announcement(announcement)).post()
                 }
             }
         }
