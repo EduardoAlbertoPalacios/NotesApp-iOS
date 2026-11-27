@@ -20,21 +20,21 @@ Desglose del [plan 004](plan.md) (aprobado el 2026-11-27). Cada tarea es una uni
 
 ## Paso 0 — Preparación
 
-- [ ] **T-00 · Rama y documentos** — *yo*
+- [x] **T-00 · Rama y documentos** — *yo*
   La rama `feat/004-search-notes` ya existe desde `main` (con el PR #3 fusionado). Commit `docs: add spec 004, plan and tasks` con `spec.md`, `plan.md` y `tasks.md`.
   **Hecho cuando:** `git status` está limpio y las pruebas unitarias y de UI existentes siguen en verde.
 
 ## Paso 1 — Domain (`feat(domain)`)
 
-- [ ] **T-01 · Palabras del texto buscado** — *yo* · RF-4, RF-13 · D-1
+- [x] **T-01 · Palabras del texto buscado** — *yo* · RF-4, RF-13 · D-1
   `public enum NoteSearch` con `static func words(in query: String) -> [String]`: normaliza (T-02) y parte por espacios en blanco, sin palabras vacías. Sin palabras ⇒ no hay búsqueda.
-- [ ] **T-02 · Normalización y coincidencia** — *yo* · depende de T-01 · RF-5 a RF-12 · D-2
+- [x] **T-02 · Normalización y coincidencia** — *yo* · depende de T-01 · RF-5 a RF-12 · D-2
   Normalización `internal` carácter a carácter ("ñ"/"Ñ" ⇒ "ñ"; resto con `folding(options: [.caseInsensitive, .diacriticInsensitive], locale: es)`). Texto buscable de la nota: título + bloques `.text` + texto de cada `.task`, unidos con `\n`. `static func matches(_ note: Note, query: String) -> Bool`: todas las palabras como subcadena.
-- [ ] **T-03 · Filtrado** — *yo* · depende de T-02 · RF-1, RF-4, RF-14
+- [x] **T-03 · Filtrado** — *yo* · depende de T-02 · RF-1, RF-4, RF-14
   `static func filter(_ notes: [Note], query: String) -> [Note]`: sin palabras devuelve `notes` tal cual; si no, las que coinciden en el mismo orden.
-- [ ] **T-04 · Pruebas de Domain** — *test-writer* · depende de T-03
+- [x] **T-04 · Pruebas de Domain** — *test-writer* · depende de T-03
   Mayúsculas y "Ñ"/"ñ"; tildes y diéresis ("reunion"/"Reunión", "pinguino"/"pingüino"); "ano" ≠ "año" y "AÑO" = "año"; parte de palabra; varias palabras en cualquier orden y repartidas entre título y contenido; tareas completadas y pendientes; categoría y color no coinciden; espacios exteriores y repetidos; solo espacios ⇒ todas; signos, números y emojis; texto muy largo; nota sin título o sin contenido; orden conservado; una palabra que solo existiría uniendo dos campos no coincide.
-- [ ] **T-05 · Cierre del paso 1** — *test-runner* + *yo*
+- [x] **T-05 · Cierre del paso 1** — *test-runner* + *yo*
   **Hecho cuando:** `DomainTests` en verde y commit `feat(domain): add NoteSearch rules`.
 
 ## Paso 2 — Presentation (`feat(presentation)`)
