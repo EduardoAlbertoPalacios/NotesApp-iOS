@@ -60,9 +60,9 @@ Desglose del [plan 004](plan.md) (aprobado el 2026-11-27). Cada tarea es una uni
 
 ## Paso 3 — Pruebas de UI (`test(app)`)
 
-- [ ] **T-15 · `NoteSearchUITests`** — *test-writer* · depende de T-14
+- [x] **T-15 · `NoteSearchUITests`** — *test-writer* · depende de T-14
   Los diez flujos del paso 3 del plan: "reunion" ⇒ solo "Reunión de equipo" y "1 resultado"; mayúsculas y palabras en otro orden; tarea de "La compra"; sin coincidencias ⇒ mensaje y "0 resultados" sin estado vacío; borrar ⇒ seis notas y contador habitual; abrir un resultado y volver; editar para que deje de coincidir; eliminar un resultado y "Deshacer"; desplazar oculta el teclado; `-UITestingLoadFailure` ⇒ buscador deshabilitado. Comprobar que `@SceneStorage` no arrastra texto entre pruebas.
-- [ ] **T-16 · Cierre del paso 3** — *test-runner* + *yo*
+- [x] **T-16 · Cierre del paso 3** — *test-runner* + *yo*
   **Hecho cuando:** `NotesAppUITests` en verde y commit `test(app): cover note search flows`.
 
 ## Paso 4 — Cierre

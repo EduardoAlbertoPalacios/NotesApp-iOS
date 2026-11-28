@@ -107,13 +107,13 @@ final class NoteListUITests: XCTestCase {
         XCTAssertEqual(element(ID.newNoteButton, in: app).label, "Nueva nota")
     }
 
-    /// Buscador y filtros siguen sin función (spec 001, RF-31/RF-32). "Nueva nota" y las
-    /// tarjetas ya abren el editor (spec 002, RF-1 y RF-4): lo cubre `NoteEditorUITests`.
+    /// Los filtros siguen sin función (spec 001, RF-31). El buscador ya funciona (spec 004): lo cubre
+    /// `NoteSearchUITests`. "Nueva nota" y las tarjetas ya abren el editor (spec 002, RF-1 y RF-4): lo
+    /// cubre `NoteEditorUITests`.
     func testGivenStaticControlsWhenTappedThenScreenDoesNotChange() {
         let app = launch()
         XCTAssertTrue(element(ID.counter, in: app).waitForExistence(timeout: timeout))
 
-        element(ID.searchField, in: app).tap()
         element(ID.filterWork, in: app).tap()
         element(ID.filterPersonal, in: app).tap()
 
@@ -191,10 +191,23 @@ final class NoteListUITests: XCTestCase {
     }
 
     /// Título de cada tarjeta (el orden es el del árbol de accesibilidad, no el de la cuadrícula).
+    ///
+    /// Se leen de una sola instantánea: con `allElementsBoundByIndex` cada tarjeta se vuelve a
+    /// resolver por índice y, si el árbol cambia entre consultas (simulador cargado en paralelo), una
+    /// tarjeta puede salir repetida y otra faltar.
     private func cardTitles(in app: XCUIApplication) -> [String] {
-        cards(in: app).allElementsBoundByIndex.map { card in
-            expectedTitles.first { card.label.hasPrefix($0) } ?? card.label
+        guard let screen = try? app.snapshot() else {
+            XCTFail("No se pudo leer la pantalla.")
+            return []
         }
+        return cardLabels(in: screen).map { label in
+            expectedTitles.first { label.hasPrefix($0) } ?? label
+        }
+    }
+
+    private func cardLabels(in snapshot: any XCUIElementSnapshot) -> [String] {
+        let own = snapshot.identifier == ID.card ? [snapshot.label] : []
+        return own + snapshot.children.flatMap { cardLabels(in: $0) }
     }
 
     private func isFullyVisible(_ element: XCUIElement, in app: XCUIApplication) -> Bool {

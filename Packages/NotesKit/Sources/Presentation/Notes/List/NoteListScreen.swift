@@ -12,6 +12,8 @@ struct NoteListScreen: View {
     let onIntent: (NoteListIntent) -> Void
 
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    /// Solo el foco del teclado: el texto buscado vive en el estado del ViewModel.
+    @FocusState private var isSearchFocused: Bool
     private let dateFormatter = NoteDateFormatter()
 
     var body: some View {
@@ -28,7 +30,10 @@ struct NoteListScreen: View {
                 .padding(.bottom, 112)
             }
             // Desplazar los resultados oculta el teclado sin tocar la búsqueda (spec 004, RF-24).
-            .scrollDismissesKeyboard(.immediately)
+            // `scrollDismissesKeyboard` no suelta el foco de un campo que está dentro del propio ScrollView.
+            .onScrollPhaseChange { _, phase in
+                if phase == .interacting { isSearchFocused = false }
+            }
             // En el ScrollView y no en el contenedor: si no, sustituye el identificador de "Nueva nota".
             .accessibilityIdentifier(NoteListAccessibilityID.screen)
             .overlay(alignment: .bottomTrailing) {
@@ -136,6 +141,9 @@ struct NoteListScreen: View {
             .foregroundStyle(Palette.textPrimary)
             .submitLabel(.search)
             .autocorrectionDisabled()
+            .focused($isSearchFocused)
+            // Explícita: la etiqueta del `TextField` no llega a VoiceOver ni a XCUITest (RF-40).
+            .accessibilityLabel(Text("Buscar en tus notas", bundle: .module))
             .accessibilityIdentifier(NoteListAccessibilityID.searchField)
             if !state.searchText.isEmpty {
                 Button {
