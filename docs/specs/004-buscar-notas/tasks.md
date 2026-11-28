@@ -67,9 +67,9 @@ Desglose del [plan 004](plan.md) (aprobado el 2026-11-27). Cada tarea es una uni
 
 ## Paso 4 — Cierre
 
-- [ ] **T-17 · Revisión de arquitectura** — *architecture-reviewer*
+- [x] **T-17 · Revisión de arquitectura** — *architecture-reviewer*
   **Hecho cuando:** responde "Sin violaciones de arquitectura" o se corrigen sus hallazgos.
-- [ ] **T-18 · Demo manual** — *tú*
+- [x] **T-18 · Demo manual** — *tú*
   iPhone en claro y oscuro: los flujos de los criterios de finalización de la spec, la tecla "Buscar", VoiceOver (anuncio tras 1 s) y texto grande. RF-30: buscar, pasar a segundo plano, detener la app desde Xcode y volver a abrirla ⇒ el texto sigue. RF-31: cerrarla desde el selector de apps ⇒ sin búsqueda. iPad pendiente mientras no haya simulador.
 - [ ] **T-19 · Memoria y PR** — *yo*
   Actualizar `MEMORY.md` y abrir el PR hacia `main` con `/create-pr`.
