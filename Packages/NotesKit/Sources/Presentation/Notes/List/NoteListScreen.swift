@@ -1,10 +1,10 @@
 import Domain
 import SwiftUI
 
-/// Vista sin estado de "Mis notas". Los controles de búsqueda, filtros, orden y ajustes se dibujan
-/// como vistas estáticas: no tienen función todavía (spec 001, RF-29 a RF-31). "Nueva nota" y las
-/// tarjetas abren el editor (spec 002, RF-1 y RF-4). Tras eliminar una nota muestra un aviso con
-/// "Deshacer", y sin notas, el estado vacío (spec 003).
+/// Vista sin estado de "Mis notas". Los filtros, el orden y los ajustes se dibujan como vistas
+/// estáticas: no tienen función todavía (spec 001, RF-29 a RF-31). "Nueva nota" y las tarjetas abren
+/// el editor (spec 002, RF-1 y RF-4). Tras eliminar una nota muestra un aviso con "Deshacer", y sin
+/// notas, el estado vacío (spec 003). El buscador filtra las notas al escribir (spec 004).
 struct NoteListScreen: View {
     let state: NoteListState
     let now: Date
@@ -12,6 +12,8 @@ struct NoteListScreen: View {
     let onIntent: (NoteListIntent) -> Void
 
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    /// Solo el foco del teclado: el texto buscado vive en el estado del ViewModel.
+    @FocusState private var isSearchFocused: Bool
     private let dateFormatter = NoteDateFormatter()
 
     var body: some View {
@@ -26,6 +28,11 @@ struct NoteListScreen: View {
                 .padding(.horizontal, 24)
                 .padding(.top, 16)
                 .padding(.bottom, 112)
+            }
+            // Desplazar los resultados oculta el teclado sin tocar la búsqueda (spec 004, RF-24).
+            // `scrollDismissesKeyboard` no suelta el foco de un campo que está dentro del propio ScrollView.
+            .onScrollPhaseChange { _, phase in
+                if phase == .interacting { isSearchFocused = false }
             }
             // En el ScrollView y no en el contenedor: si no, sustituye el identificador de "Nueva nota".
             .accessibilityIdentifier(NoteListAccessibilityID.screen)
@@ -93,7 +100,7 @@ struct NoteListScreen: View {
                     .foregroundStyle(Palette.textPrimary)
                     .accessibilityAddTraits(.isHeader)
                 if state.loadError == nil, !state.isLoading {
-                    Text(NoteListStrings.counter(state.notes.count))
+                    Text(subtitle)
                         .font(.subheadline)
                         .foregroundStyle(Palette.textSecondary)
                         .accessibilityIdentifier(NoteListAccessibilityID.counter)
@@ -110,19 +117,56 @@ struct NoteListScreen: View {
         }
     }
 
+    /// Con búsqueda, el número de resultados sustituye al contador (spec 004, RF-15 a RF-17).
+    private var subtitle: String {
+        state.isSearching ? NoteListStrings.results(state.results.count) : NoteListStrings.counter(state.notes.count)
+    }
+
+    /// Buscador (spec 004). El texto vive en el estado: la vista solo envía cada cambio.
     private var searchField: some View {
         HStack(spacing: 12) {
             Image(systemName: "magnifyingglass")
-            Text("Buscar en tus notas", bundle: .module)
-            Spacer()
+                .foregroundStyle(Palette.textSecondary)
+                .accessibilityHidden(true)
+            TextField(
+                text: Binding(
+                    get: { state.searchText },
+                    set: { onIntent(.searchTextChanged($0)) }
+                ),
+                prompt: Text("Buscar en tus notas", bundle: .module).foregroundStyle(Palette.textSecondary)
+            ) {
+                // Etiqueta de VoiceOver; también lee el texto buscado (RF-40).
+                Text("Buscar en tus notas", bundle: .module)
+            }
+            .foregroundStyle(Palette.textPrimary)
+            .submitLabel(.search)
+            .autocorrectionDisabled()
+            .focused($isSearchFocused)
+            // Explícita: la etiqueta del `TextField` no llega a VoiceOver ni a XCUITest (RF-40).
+            .accessibilityLabel(Text("Buscar en tus notas", bundle: .module))
+            .accessibilityIdentifier(NoteListAccessibilityID.searchField)
+            if !state.searchText.isEmpty {
+                Button {
+                    onIntent(.clearSearchTapped)
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundStyle(Palette.textSecondary)
+                        .frame(minWidth: 44, minHeight: 44)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(Text("Borrar búsqueda", bundle: .module))
+                .accessibilityIdentifier(NoteListAccessibilityID.searchClearButton)
+            }
         }
         .font(.body)
-        .foregroundStyle(Palette.textSecondary)
-        .padding(.horizontal, 18)
+        .padding(.leading, 18)
+        .padding(.trailing, state.searchText.isEmpty ? 18 : 6)
         .frame(minHeight: 50)
         .background(Palette.surface, in: Capsule())
-        .accessibilityElement(children: .combine)
-        .accessibilityIdentifier(NoteListAccessibilityID.searchField)
+        // Sin notas, cargando o con error no se puede buscar (RF-32, RF-35, RF-36).
+        .disabled(!state.isSearchEnabled)
+        .opacity(state.isSearchEnabled ? 1 : 0.6)
     }
 
     private var filters: some View {
@@ -192,6 +236,8 @@ struct NoteListScreen: View {
             .accessibilityIdentifier(NoteListAccessibilityID.loading)
         } else if state.isEmpty {
             emptyView
+        } else if state.hasNoResults {
+            noResultsView
         } else {
             AlternatingColumnsLayout(
                 columns: GridColumns.count(
@@ -201,7 +247,7 @@ struct NoteListScreen: View {
                 ),
                 spacing: 12
             ) {
-                ForEach(state.notes) { note in
+                ForEach(state.visibleNotes) { note in
                     Button {
                         onIntent(.noteTapped(note))
                     } label: {
@@ -231,6 +277,16 @@ struct NoteListScreen: View {
         .frame(maxWidth: .infinity, minHeight: 240)
         .accessibilityElement(children: .combine)
         .accessibilityIdentifier(NoteListAccessibilityID.emptyState)
+    }
+
+    /// Ninguna nota coincide (spec 004, RF-18); el texto se muestra completo aunque sea largo.
+    private var noResultsView: some View {
+        Text(NoteListStrings.noMatches(state.searchText))
+            .font(.body)
+            .foregroundStyle(Palette.textSecondary)
+            .multilineTextAlignment(.center)
+            .frame(maxWidth: .infinity, minHeight: 240)
+            .accessibilityIdentifier(NoteListAccessibilityID.noResults)
     }
 
     private var errorView: some View {
@@ -284,6 +340,18 @@ private enum PreviewData {
     }
 
     static let restoreFailed = NoteListState(isLoading: false, notes: notes, banner: .restoreFailed)
+
+    static func searching(_ text: String) -> NoteListState {
+        let notes = notes
+        return NoteListState(
+            isLoading: false,
+            notes: notes,
+            searchText: text,
+            results: NoteSearch.filter(notes, query: text)
+        )
+    }
+
+    static let loadingWithSearch = NoteListState(searchText: "reunion")
 }
 
 #Preview("Con notas") {
@@ -328,6 +396,28 @@ private enum PreviewData {
 #Preview("Nota eliminada · texto grande") {
     NoteListScreen(state: PreviewData.deletedBanner, now: PreviewData.now, isPad: false, onIntent: { _ in })
         .dynamicTypeSize(.accessibility2)
+}
+
+#Preview("Buscando") {
+    NoteListScreen(state: PreviewData.searching("reunion"), now: PreviewData.now, isPad: false, onIntent: { _ in })
+}
+
+#Preview("Buscando · texto grande") {
+    NoteListScreen(state: PreviewData.searching("reunion"), now: PreviewData.now, isPad: false, onIntent: { _ in })
+        .dynamicTypeSize(.accessibility2)
+}
+
+#Preview("Sin resultados") {
+    NoteListScreen(state: PreviewData.searching("proveedores"), now: PreviewData.now, isPad: false, onIntent: { _ in })
+}
+
+#Preview("Sin resultados · oscuro") {
+    NoteListScreen(state: PreviewData.searching("proveedores"), now: PreviewData.now, isPad: false, onIntent: { _ in })
+        .preferredColorScheme(.dark)
+}
+
+#Preview("Cargando con búsqueda") {
+    NoteListScreen(state: PreviewData.loadingWithSearch, now: PreviewData.now, isPad: false, onIntent: { _ in })
 }
 
 #Preview("Error") {

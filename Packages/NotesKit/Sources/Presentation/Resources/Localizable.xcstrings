@@ -13,12 +13,25 @@
         }
       }
     },
+    "%lld resultados" : {
+      "localizations" : {
+        "es" : {
+          "variations" : {
+            "plural" : {
+              "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld resultado" } },
+              "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld resultados" } }
+            }
+          }
+        }
+      }
+    },
     "%@, %@" : {
       "comment" : "Tarea de una tarjeta para VoiceOver: texto de la tarea y su estado (\"Tomates, pendiente\")"
     },
     "Aceptar" : { },
     "Aún no tienes notas." : { },
     "Ayer" : { },
+    "Borrar búsqueda" : { },
     "Buscar en tus notas" : { },
     "Cargando notas" : { },
     "Categoría" : { },
@@ -39,6 +52,7 @@
     "Lista de tareas" : { },
     "Más opciones" : { },
     "Mis notas" : { },
+    "No hay notas que coincidan con «%@»" : { },
     "No pudimos cargar tus notas." : { },
     "No se pudieron guardar los cambios" : { },
     "No se pudieron guardar los cambios. Lo que escribiste sigue aquí." : { },

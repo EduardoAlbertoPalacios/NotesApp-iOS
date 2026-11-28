@@ -14,4 +14,8 @@ enum NoteListIntent: Equatable, Sendable {
     case voiceOverChanged(Bool)
     /// La app pasó a segundo plano (spec 003, RF-22).
     case movedToBackground
+    /// El texto del buscador cambió, por el usuario o al restaurarlo (spec 004, RF-1, RF-3, RF-30).
+    case searchTextChanged(String)
+    /// Botón de borrar del buscador (spec 004, RF-21, RF-22).
+    case clearSearchTapped
 }
